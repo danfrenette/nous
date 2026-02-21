@@ -6,7 +6,7 @@ module Nous
   class Extractor < Command
     class Error < Command::Error; end
 
-    NOISY_TAGS = %w[script style link nav footer img video svg].freeze
+    NOISY_TAGS = %w[script style link nav header footer img video svg].freeze
 
     def initialize(html:, selector: nil)
       @html = html

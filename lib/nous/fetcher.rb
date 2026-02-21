@@ -4,9 +4,9 @@ module Nous
   class Fetcher < Command
     class Error < Command::Error; end
 
-    def initialize(seed_url:, selector: nil, **crawler_options)
+    def initialize(seed_url:, extractor: Extractor::Default.new, **crawler_options)
       @seed_url = seed_url
-      @selector = selector
+      @extractor = extractor
       @crawler_options = crawler_options
     end
 
@@ -17,7 +17,7 @@ module Nous
 
     private
 
-    attr_reader :seed_url, :selector, :crawler_options
+    attr_reader :seed_url, :extractor, :crawler_options
 
     def crawl
       result = Crawler.call(seed_url:, **crawler_options)
@@ -26,31 +26,16 @@ module Nous
       result.payload
     end
 
-    def extract(html)
-      result = Extractor.call(html:, selector:)
-      raise Error, result.error.message if result.failure?
-
-      result.payload
-    end
-
-    def convert(html)
-      result = Converter.call(html:)
-      raise Error, result.error.message if result.failure?
-
-      result.payload
-    end
-
     def process_page(raw)
-      extracted = extract(raw[:html])
-      markdown = convert(extracted[:content])
+      extracted = extractor.extract(raw)
 
       Page.new(
         title: extracted[:title],
         url: raw[:url],
         pathname: raw[:pathname],
-        content: markdown
+        content: extracted[:content]
       )
-    rescue Error
+    rescue Nous::Error
       nil
     end
   end
