@@ -1,0 +1,43 @@
+# frozen_string_literal: true
+
+module Nous
+  class Crawler < Command
+    class UrlFilter
+      IGNORED_SCHEMES = %w[mailto: javascript: tel:].freeze
+
+      def initialize(config)
+        @host = config.seed.host
+        @match = config.match
+        @keep_query = config.keep_query
+      end
+
+      def canonicalize(uri)
+        uri = URI.parse(uri.to_s)
+        uri.fragment = nil
+        uri.query = nil unless keep_query
+        uri.path = "/" if uri.path.empty?
+        uri.to_s
+      end
+
+      def allowed?(href)
+        return false if href.strip.empty?
+
+        IGNORED_SCHEMES.none? { |s| href.start_with?(s) }
+      end
+
+      def same_host?(uri)
+        uri.is_a?(URI::HTTP) && uri.host == host
+      end
+
+      def matches_path?(path)
+        return true if match.empty?
+
+        match.any? { |pattern| File.fnmatch(pattern, path, File::FNM_PATHNAME | File::FNM_EXTGLOB) }
+      end
+
+      private
+
+      attr_reader :host, :match, :keep_query
+    end
+  end
+end

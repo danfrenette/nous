@@ -1,0 +1,80 @@
+# frozen_string_literal: true
+
+require "async"
+require "async/http/internet"
+require "nokogiri"
+require "uri"
+
+module Nous
+  class Crawler < Command
+    class Error < Command::Error; end
+
+    def initialize(seed_url:, **options)
+      @config = Configuration.new(seed_url:, **options)
+    end
+
+    def call
+      pages = []
+      queue = [url_filter.canonicalize(config.seed)]
+      seen = Set.new(queue)
+
+      Async do
+        client = Async::HTTP::Internet.new
+        begin
+          crawl(queue:, seen:, pages:, client:)
+        ensure
+          client.close
+        end
+      end.wait
+
+      success(payload: pages)
+    end
+
+    private
+
+    attr_reader :config
+
+    def crawl(queue:, seen:, pages:, client:)
+      while queue.any? && pages.length < config.limit
+        batch = queue.shift(config.concurrency)
+        fetch_batch(batch, client).each do |page|
+          next unless page
+
+          pages << page
+          break if pages.length >= config.limit
+
+          link_extractor.extract(page[:url], page[:html]).each do |url|
+            next if seen.include?(url)
+
+            seen << url
+            queue << url
+          end
+        end
+      end
+    end
+
+    def fetch_batch(urls, client)
+      tasks = []
+
+      Async do |task|
+        urls.each do |url|
+          tasks << task.async { page_fetcher(client).fetch(url) }
+        end
+      end.wait
+
+      tasks.map(&:wait)
+    end
+
+    def url_filter
+      @url_filter ||= UrlFilter.new(config)
+    end
+
+    def link_extractor
+      @link_extractor ||= LinkExtractor.new(url_filter:, verbose: config.verbose)
+    end
+
+    def page_fetcher(client)
+      PageFetcher.new(client:, timeout: config.timeout, verbose: config.verbose)
+    end
+  end
+end
