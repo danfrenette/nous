@@ -11,7 +11,8 @@ module Nous
     end
 
     def call
-      pages = crawl.filter_map { |raw| process_page(raw) }
+      raw_pages = crawl
+      pages = extract(raw_pages)
       success(payload: pages)
     end
 
@@ -26,17 +27,13 @@ module Nous
       result.payload
     end
 
-    def process_page(raw)
-      extracted = extractor.extract(raw)
-
-      Page.new(
-        title: extracted[:title],
-        url: raw[:url],
-        pathname: raw[:pathname],
-        content: extracted[:content]
-      )
-    rescue Nous::Error
-      nil
+    def extract(raw_pages)
+      ExtractionRunner.new(
+        raw_pages:,
+        extractor:,
+        concurrency: crawler_options.fetch(:concurrency, 3),
+        verbose: crawler_options.fetch(:verbose, false)
+      ).call
     end
   end
 end

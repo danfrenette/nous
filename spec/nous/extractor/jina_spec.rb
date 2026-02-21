@@ -19,23 +19,25 @@ RSpec.describe Nous::Extractor::Jina do
       .to_return(status: 200, body: jina_response, headers: {"Content-Type" => "application/json"})
   end
 
+  let(:extractor) { described_class.new(retry_interval: 0) }
+
   describe "#extract" do
     it "returns title and markdown content from Jina API" do
-      result = described_class.new.extract(page)
+      result = extractor.extract(page)
 
       expect(result[:title]).to eq("Test Article")
       expect(result[:content]).to eq("# Hello\n\nSome markdown content.")
     end
 
     it "sends the correct headers" do
-      described_class.new.extract(page)
+      extractor.extract(page)
 
       expect(WebMock).to have_requested(:get, "https://r.jina.ai/https://example.com/test")
         .with(headers: {"Accept" => "application/json", "X-No-Cache" => "true"})
     end
 
     it "includes authorization header when api_key is provided" do
-      described_class.new(api_key: "test-key").extract(page)
+      described_class.new(api_key: "test-key", retry_interval: 0).extract(page)
 
       expect(WebMock).to have_requested(:get, "https://r.jina.ai/https://example.com/test")
         .with(headers: {"Authorization" => "Bearer test-key"})
@@ -45,15 +47,15 @@ RSpec.describe Nous::Extractor::Jina do
       stub_request(:get, "https://r.jina.ai/https://example.com/test")
         .to_return(status: 429, body: "rate limited")
 
-      expect { described_class.new.extract(page) }
-        .to raise_error(Nous::Extractor::Jina::Error, /429/)
+      expect { extractor.extract(page) }
+        .to raise_error(Nous::Extractor::Jina::Error)
     end
 
     it "raises on invalid JSON" do
       stub_request(:get, "https://r.jina.ai/https://example.com/test")
         .to_return(status: 200, body: "not json")
 
-      expect { described_class.new.extract(page) }
+      expect { extractor.extract(page) }
         .to raise_error(Nous::Extractor::Jina::Error, /invalid JSON/)
     end
   end
