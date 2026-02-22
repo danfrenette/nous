@@ -4,9 +4,10 @@ module Nous
   class Fetcher < Command
     class FetchError < StandardError; end
 
-    def initialize(seed_url:, extractor: Extractor::Default.new)
+    def initialize(seed_url:, extractor: Extractor::Default.new, http_client: nil)
       @seed_url = seed_url
       @extractor = extractor
+      @http_client = http_client
     end
 
     def call
@@ -17,10 +18,10 @@ module Nous
 
     private
 
-    attr_reader :seed_url, :extractor
+    attr_reader :seed_url, :extractor, :http_client
 
     def crawl
-      result = Crawler.call(seed_url:)
+      result = Crawler.call(seed_url:, http_client:)
       raise FetchError, result.error.message if result.failure?
 
       result.payload

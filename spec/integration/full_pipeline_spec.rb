@@ -20,21 +20,30 @@ RSpec.describe "Full pipeline integration" do
     end
   end
 
-  before do
-    responses = {
+  let(:responses) do
+    {
       "https://example.com/" => mock_response.new(status: 200, body: index_html),
       "https://example.com/about" => mock_response.new(status: 200, body: about_html),
       "https://example.com/guide" => mock_response.new(status: 404, body: ""),
       "https://example.com/nav-link" => mock_response.new(status: 200, body: about_html)
     }
+  end
 
-    allow_any_instance_of(Async::HTTP::Internet).to receive(:get) do |_client, url, _headers|
-      responses.fetch(url) { mock_response.new(status: 404, body: "") }
-    end
+  let(:fake_client) do
+    default_response = mock_response.new(status: 404, body: "")
+    client_responses = responses
+
+    Class.new do
+      define_method(:get) do |url, _headers = {}|
+        client_responses.fetch(url) { default_response }
+      end
+
+      def close = nil
+    end.new
   end
 
   it "crawls, extracts, and serializes as text" do
-    pages = Nous.fetch("https://example.com", limit: 10, concurrency: 2, timeout: 5)
+    pages = Nous.fetch("https://example.com", http_client: fake_client, limit: 10, concurrency: 2, timeout: 5)
 
     expect(pages).to be_an(Array)
     expect(pages.length).to be >= 2
@@ -57,7 +66,7 @@ RSpec.describe "Full pipeline integration" do
   end
 
   it "crawls, extracts, and serializes as json" do
-    pages = Nous.fetch("https://example.com", limit: 10, concurrency: 2, timeout: 5)
+    pages = Nous.fetch("https://example.com", http_client: fake_client, limit: 10, concurrency: 2, timeout: 5)
     output = Nous.serialize(pages, format: :json)
 
     parsed = JSON.parse(output)
@@ -70,7 +79,7 @@ RSpec.describe "Full pipeline integration" do
   end
 
   it "respects the limit option" do
-    pages = Nous.fetch("https://example.com", limit: 1, concurrency: 1, timeout: 5)
+    pages = Nous.fetch("https://example.com", http_client: fake_client, limit: 1, concurrency: 1, timeout: 5)
 
     expect(pages.length).to eq(1)
   end
@@ -91,7 +100,7 @@ RSpec.describe "Full pipeline integration" do
       .to_return(status: 200, body: jina_response, headers: {"content-type" => "application/json"})
 
     extractor = Nous::Extractor::Jina.new
-    pages = Nous.fetch("https://example.com", limit: 10, concurrency: 2, timeout: 5, extractor: extractor)
+    pages = Nous.fetch("https://example.com", http_client: fake_client, limit: 10, concurrency: 2, timeout: 5, extractor: extractor)
 
     expect(pages).to all(be_a(Nous::Page))
     expect(pages.first.title).to eq("Jina Title")

@@ -9,8 +9,9 @@ module Nous
   class Crawler < Command
     class CrawlError < StandardError; end
 
-    def initialize(seed_url:)
+    def initialize(seed_url:, http_client: nil)
       @seed_uri = parse_seed!(seed_url)
+      @http_client = http_client
     end
 
     def call
@@ -21,7 +22,7 @@ module Nous
       seen = Set.new(queue)
 
       Async do
-        client = Async::HTTP::Internet.new
+        client = http_client || Async::HTTP::Internet.new
         begin
           crawl(queue:, seen:, pages:, client:)
         ensure
@@ -34,7 +35,7 @@ module Nous
 
     private
 
-    attr_reader :seed_uri
+    attr_reader :seed_uri, :http_client
 
     def config
       Nous.configuration
