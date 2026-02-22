@@ -2,7 +2,7 @@
 
 RSpec.describe Nous::Fetcher::ExtractionThread do
   let(:raw_page) { {url: "https://example.com/", pathname: "/", html: fixture("index.html")} }
-  let(:config) { instance_double(Nous::Configuration, verbose?: false) }
+  let(:config) { instance_double(Nous::Configuration, debug?: false) }
 
   before { allow(Nous).to receive(:configuration).and_return(config) }
 
@@ -26,8 +26,8 @@ RSpec.describe Nous::Fetcher::ExtractionThread do
       expect(thread.call).to be_nil
     end
 
-    it "logs the skip reason when verbose" do
-      allow(config).to receive(:verbose?).and_return(true)
+    it "logs the skip reason when debug" do
+      allow(config).to receive(:debug?).and_return(true)
 
       empty_page = {url: "https://example.com/empty", pathname: "/empty", html: "<html><body></body></html>"}
       extractor = Nous::Extractor::Default.new

@@ -34,7 +34,7 @@ module Nous
     end
 
     def fetch_options
-      opts = options.slice(:concurrency, :match, :limit, :timeout, :verbose)
+      opts = options.slice(:concurrency, :match, :limit, :timeout, :debug)
       opts[:extractor] = extractor
       opts
     end
@@ -79,13 +79,13 @@ module Nous
         opts.on("-l", "--limit N", Integer, "Maximum pages to fetch") { |v| options[:limit] = v }
         opts.on("--timeout N", Integer, "Per-request timeout in seconds (default: 15)") { |v| options[:timeout] = v }
         opts.on("--jina", "Use Jina Reader API for extraction (handles JS-rendered sites)") { options[:jina] = true }
-        opts.on("-v", "--verbose", "Verbose logging to stderr") { options[:verbose] = true }
-        opts.on("-h", "--help", "Show help") do
-          $stdout.puts(opts)
+        opts.on("-d", "--debug", "Debug logging to stderr") { options[:debug] = true }
+        opts.on("-v", "--version", "Show version") do
+          $stdout.puts("nous #{Nous::VERSION}")
           exit
         end
-        opts.on("--version", "Show version") do
-          $stdout.puts("nous #{Nous::VERSION}")
+        opts.on("-h", "--help", "Show help") do
+          $stdout.puts(opts)
           exit
         end
       end

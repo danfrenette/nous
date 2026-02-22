@@ -23,14 +23,14 @@ RSpec.describe Nous::Configuration do
       expect(config.match).to eq(["/docs/*"])
     end
 
-    it "defaults verbose to false" do
+    it "defaults debug to false" do
       config = described_class.new
-      expect(config.verbose?).to be false
+      expect(config.debug?).to be false
     end
 
-    it "respects verbose override" do
-      config = described_class.new(verbose: true)
-      expect(config.verbose?).to be true
+    it "respects debug override" do
+      config = described_class.new(debug: true)
+      expect(config.debug?).to be true
     end
   end
 end

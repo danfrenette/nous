@@ -14,7 +14,7 @@ module Nous
     end
 
     def call
-      suppress_async_warnings unless config.verbose?
+      suppress_async_warnings unless config.debug?
 
       pages = []
       queue = [url_filter.canonicalize(seed_uri)]

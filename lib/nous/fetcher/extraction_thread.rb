@@ -18,7 +18,7 @@ module Nous
           content: extracted[:content]
         )
       rescue Extractor::ExtractionError => e
-        warn("[nous] extract skip #{raw_page[:url]}: #{e.message}") if Nous.configuration.verbose?
+        warn("[nous] extract skip #{raw_page[:url]}: #{e.message}") if Nous.configuration.debug?
         nil
       end
 

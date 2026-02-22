@@ -32,7 +32,7 @@ module Nous
 
         canonical
       rescue URI::InvalidURIError => e
-        warn("[nous] malformed href #{href.inspect}: #{e.message}") if Nous.configuration.verbose?
+        warn("[nous] malformed href #{href.inspect}: #{e.message}") if Nous.configuration.debug?
         nil
       end
     end

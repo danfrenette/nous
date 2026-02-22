@@ -7,6 +7,7 @@
 - Shared `Extractor::ExtractionError` contract: all extractor backends raise this on failure
 - Pull `seed_url` off `Configuration`; `Crawler` owns URL parsing and validation directly
 - Explicit rescue lists in CLI and extraction thread instead of broad `Nous::Error` rescue
+- Rename `--verbose`/`-v` to `--debug`/`-d`; `-v` is now `--version`
 
 ## [0.2.0] - 2026-02-21
 

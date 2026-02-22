@@ -9,15 +9,15 @@ module Nous
     DEFAULT_TIMEOUT = 15
 
     def initialize(concurrency: DEFAULT_CONCURRENCY, match: [], limit: DEFAULT_LIMIT,
-      timeout: DEFAULT_TIMEOUT, verbose: false, keep_query: false)
+      timeout: DEFAULT_TIMEOUT, debug: false, keep_query: false)
       @concurrency = Integer(concurrency).clamp(1, 20)
       @match = Array(match)
       @limit = Integer(limit).clamp(1, 10_000)
       @timeout = Integer(timeout)
-      @verbose = verbose
+      @debug = debug
       @keep_query = keep_query
     end
 
-    def verbose? = @verbose
+    def debug? = @debug
   end
 end

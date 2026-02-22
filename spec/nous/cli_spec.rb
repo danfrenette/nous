@@ -72,12 +72,12 @@ RSpec.describe Nous::Cli do
       expect(Nous).to have_received(:serialize).with(pages, format: :json)
     end
 
-    it "passes verbose flag" do
-      expect { run_cli("https://example.com", "-v") }.to output.to_stdout
+    it "passes debug flag" do
+      expect { run_cli("https://example.com", "-d") }.to output.to_stdout
 
       expect(Nous).to have_received(:fetch).with(
         "https://example.com",
-        hash_including(verbose: true)
+        hash_including(debug: true)
       )
     end
   end
@@ -154,9 +154,15 @@ RSpec.describe Nous::Cli do
   end
 
   describe "--version" do
-    it "prints version and exits" do
+    it "prints version and exits with --version" do
       expect do
         expect { run_cli("--version") }.to raise_error(SystemExit) { |e| expect(e.status).to eq(0) }
+      end.to output(/nous #{Nous::VERSION}/o).to_stdout
+    end
+
+    it "prints version and exits with -v" do
+      expect do
+        expect { run_cli("-v") }.to raise_error(SystemExit) { |e| expect(e.status).to eq(0) }
       end.to output(/nous #{Nous::VERSION}/o).to_stdout
     end
   end

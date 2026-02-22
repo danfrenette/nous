@@ -39,7 +39,7 @@ module Nous
       end
 
       def skip(url, reason)
-        warn("[nous] skip #{url}: #{reason}") if config.verbose?
+        warn("[nous] skip #{url}: #{reason}") if config.debug?
         nil
       end
     end

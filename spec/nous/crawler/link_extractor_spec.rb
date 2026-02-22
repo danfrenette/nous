@@ -3,7 +3,7 @@
 RSpec.describe Nous::Crawler::LinkExtractor do
   let(:html) { fixture("index.html") }
 
-  let(:config) { instance_double(Nous::Configuration, match: [], keep_query: false, verbose?: false) }
+  let(:config) { instance_double(Nous::Configuration, match: [], keep_query: false, debug?: false) }
 
   before { allow(Nous).to receive(:configuration).and_return(config) }
 

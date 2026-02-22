@@ -8,7 +8,7 @@ RSpec.describe Nous::Fetcher::ExtractionRunner do
       {url: "https://example.com/about", pathname: "/about", html: html}
     ]
   end
-  let(:config) { instance_double(Nous::Configuration, concurrency: 3, verbose?: false) }
+  let(:config) { instance_double(Nous::Configuration, concurrency: 3, debug?: false) }
 
   before { allow(Nous).to receive(:configuration).and_return(config) }
 

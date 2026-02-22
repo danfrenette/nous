@@ -42,8 +42,8 @@ nous https://example.com -s "article.post"
 # Use Jina Reader API for JS-rendered sites (Next.js, SPAs)
 nous https://example.com --jina
 
-# Verbose logging
-nous https://example.com -v
+# Debug logging
+nous https://example.com -d
 ```
 
 ### Options
@@ -58,7 +58,9 @@ nous https://example.com -v
 | `-l`, `--limit N` | Maximum pages to fetch | `100` |
 | `--timeout N` | Per-request timeout in seconds | `15` |
 | `--jina` | Use Jina Reader API for extraction | off |
-| `-v`, `--verbose` | Verbose logging to stderr | off |
+| `-v`, `--version` | Print version and exit | off |
+| `-h`, `--help` | Print usage and exit | off |
+| `-d`, `--debug` | Debug logging to stderr | off |
 
 ## Ruby API
 
