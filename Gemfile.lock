@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    nous (0.1.0)
+    nous (0.2.0)
       async (~> 2.24)
       async-http (~> 0.88)
       faraday (~> 2.12)
@@ -182,4 +182,4 @@ DEPENDENCIES
   webmock (~> 3.25)
 
 BUNDLED WITH
-   4.0.6
+  4.0.6

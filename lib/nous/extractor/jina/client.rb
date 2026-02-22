@@ -5,10 +5,10 @@ require "faraday/retry"
 require "json"
 
 module Nous
-  class Extractor
+  module Extractor
     class Jina
       class Client
-        class Error < Nous::Error; end
+        class RequestError < StandardError; end
 
         BASE_URL = "https://r.jina.ai"
         RETRYABLE_STATUSES = [429, 500, 502, 503, 504].freeze
@@ -22,7 +22,7 @@ module Nous
           response = connection.get("/#{url}")
           parse(response.body)
         rescue Faraday::Error => e
-          raise Error, e.message
+          raise RequestError, e.message
         end
 
         private
@@ -51,7 +51,7 @@ module Nous
         def parse(body)
           JSON.parse(body)
         rescue JSON::ParserError => e
-          raise Error, "invalid JSON: #{e.message}"
+          raise RequestError, "invalid JSON: #{e.message}"
         end
       end
     end

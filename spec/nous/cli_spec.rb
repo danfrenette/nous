@@ -137,7 +137,7 @@ RSpec.describe Nous::Cli do
     end
 
     it "exits with error when fetch fails" do
-      allow(Nous).to receive(:fetch).and_raise(Nous::Error, "connection refused")
+      allow(Nous).to receive(:fetch).and_raise(Nous::Fetcher::FetchError, "connection refused")
 
       expect do
         expect { run_cli("https://example.com") }.to raise_error(SystemExit) { |e| expect(e.status).to eq(1) }

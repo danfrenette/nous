@@ -4,7 +4,7 @@ require "optparse"
 
 module Nous
   class Cli
-    class Error < Nous::Error; end
+    class CliError < StandardError; end
 
     def initialize(argv)
       @argv = argv
@@ -18,7 +18,9 @@ module Nous
       pages = Nous.fetch(seed_url, **fetch_options)
       output = Nous.serialize(pages, format: options[:format])
       write_output(output)
-    rescue Nous::Error => e
+    rescue CliError,
+      Fetcher::FetchError,
+      Serializer::SerializationError => e
       warn("nous: #{e.message}")
       exit 1
     end
@@ -44,7 +46,7 @@ module Nous
     end
 
     def validate!
-      raise Error, "no URL provided. Usage: nous <url> [options]" unless seed_url
+      raise CliError, "no URL provided. Usage: nous <url> [options]" unless seed_url
     end
 
     def write_output(output)
@@ -58,7 +60,7 @@ module Nous
     def parse_options!
       parser.parse!(argv)
     rescue OptionParser::InvalidOption => e
-      raise Error, e.message
+      raise CliError, e.message
     end
 
     def parser

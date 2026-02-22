@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
 module Nous
-  class Extractor
+  module Extractor
     class Jina
-      class Error < Nous::Error; end
-
       def initialize(api_key: nil, timeout: 30, **client_options)
         @client = Client.new(api_key: api_key || ENV["JINA_API_KEY"], timeout:, **client_options)
       end
@@ -13,8 +11,8 @@ module Nous
         body = client.get(page[:url])
 
         {title: body.dig("data", "title") || "", content: body.dig("data", "content") || ""}
-      rescue Client::Error => e
-        raise Error, e.message
+      rescue Client::RequestError => e
+        raise ExtractionError, e.message
       end
 
       private

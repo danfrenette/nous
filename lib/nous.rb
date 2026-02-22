@@ -9,8 +9,8 @@ module Nous
   class << self
     attr_reader :configuration
 
-    def configure(seed_url:, **options)
-      @configuration = Configuration.new(seed_url:, **options)
+    def configure(**options)
+      @configuration = Configuration.new(**options)
     end
 
     def reset_configuration!
@@ -18,7 +18,7 @@ module Nous
     end
 
     def fetch(seed_url, extractor: Extractor::Default.new, **options)
-      configure(seed_url:, **options)
+      configure(**options)
 
       result = Fetcher.call(seed_url:, extractor:)
       raise result.error if result.failure?

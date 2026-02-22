@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 module Nous
-  class Extractor
+  module Extractor
+    class ExtractionError < StandardError; end
+
     class Default
       def initialize(selector: nil)
         @selector = selector
@@ -12,6 +14,8 @@ module Nous
         markdown = convert_to_markdown(extracted[:content])
 
         {title: extracted[:title], content: markdown}
+      rescue Client::ExtractionError, Converter::ConversionError => e
+        raise ExtractionError, e.message
       end
 
       private
@@ -19,7 +23,7 @@ module Nous
       attr_reader :selector
 
       def extract_content(html)
-        result = Extractor.call(html:, selector:)
+        result = Client.call(html:, selector:)
         raise result.error if result.failure?
 
         result.payload

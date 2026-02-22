@@ -58,14 +58,14 @@ RSpec.describe Nous::Extractor::Jina::Client do
       stub_request(:get, jina_url).to_return(status: 429, body: "rate limited")
 
       expect { client.get(url) }
-        .to raise_error(Nous::Extractor::Jina::Client::Error)
+        .to raise_error(Nous::Extractor::Jina::Client::RequestError)
     end
 
     it "raises on invalid JSON" do
       stub_request(:get, jina_url).to_return(status: 200, body: "not json")
 
       expect { client.get(url) }
-        .to raise_error(Nous::Extractor::Jina::Client::Error, /invalid JSON/)
+        .to raise_error(Nous::Extractor::Jina::Client::RequestError, /invalid JSON/)
     end
   end
 end

@@ -4,7 +4,7 @@ require "json"
 
 module Nous
   class Serializer < Command
-    class Error < Command::Error; end
+    class SerializationError < StandardError; end
 
     FORMATS = %i[text json].freeze
 
@@ -24,7 +24,10 @@ module Nous
     attr_reader :pages, :format
 
     def validate_format!
-      raise Error, "unknown format: #{format}. Must be one of: #{FORMATS.join(", ")}" unless FORMATS.include?(format)
+      return if FORMATS.include?(format)
+
+      raise SerializationError,
+        "unknown format: #{format}. Must be one of: #{FORMATS.join(", ")}"
     end
 
     def serialize_text

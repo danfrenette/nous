@@ -4,7 +4,7 @@ require "reverse_markdown"
 
 module Nous
   class Converter < Command
-    class Error < Command::Error; end
+    class ConversionError < StandardError; end
 
     def initialize(html:)
       @html = html

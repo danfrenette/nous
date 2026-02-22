@@ -21,7 +21,7 @@ RSpec.describe Nous::Extractor::Default do
     it "raises on empty content" do
       empty_page = {url: "https://example.com/", pathname: "/", html: "<html><body></body></html>"}
 
-      expect { described_class.new.extract(empty_page) }.to raise_error(Nous::Command::Error)
+      expect { described_class.new.extract(empty_page) }.to raise_error(Nous::Extractor::ExtractionError)
     end
   end
 end

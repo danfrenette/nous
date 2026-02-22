@@ -7,17 +7,17 @@ require "uri"
 
 module Nous
   class Crawler < Command
-    class Error < Command::Error; end
+    class CrawlError < StandardError; end
 
     def initialize(seed_url:)
-      @seed_url = seed_url
+      @seed_uri = parse_seed!(seed_url)
     end
 
     def call
       suppress_async_warnings unless config.verbose?
 
       pages = []
-      queue = [url_filter.canonicalize(config.seed)]
+      queue = [url_filter.canonicalize(seed_uri)]
       seen = Set.new(queue)
 
       Async do
@@ -34,7 +34,7 @@ module Nous
 
     private
 
-    attr_reader :seed_url
+    attr_reader :seed_uri
 
     def config
       Nous.configuration
@@ -72,7 +72,7 @@ module Nous
     end
 
     def url_filter
-      @url_filter ||= UrlFilter.new(config)
+      @url_filter ||= UrlFilter.new(seed_uri:)
     end
 
     def link_extractor
@@ -86,6 +86,15 @@ module Nous
     def suppress_async_warnings
       require "console"
       Console.logger.level = :error
+    end
+
+    def parse_seed!(url)
+      uri = URI.parse(url)
+      raise CrawlError, "seed URL must be http or https" unless uri.is_a?(URI::HTTP)
+
+      uri
+    rescue URI::InvalidURIError => e
+      raise CrawlError, "invalid seed URL: #{e.message}"
     end
   end
 end

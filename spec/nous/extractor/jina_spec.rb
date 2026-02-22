@@ -48,7 +48,7 @@ RSpec.describe Nous::Extractor::Jina do
         .to_return(status: 429, body: "rate limited")
 
       expect { extractor.extract(page) }
-        .to raise_error(Nous::Extractor::Jina::Error)
+        .to raise_error(Nous::Extractor::ExtractionError)
     end
 
     it "raises on invalid JSON" do
@@ -56,7 +56,7 @@ RSpec.describe Nous::Extractor::Jina do
         .to_return(status: 200, body: "not json")
 
       expect { extractor.extract(page) }
-        .to raise_error(Nous::Extractor::Jina::Error, /invalid JSON/)
+        .to raise_error(Nous::Extractor::ExtractionError, /invalid JSON/)
     end
   end
 end

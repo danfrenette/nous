@@ -2,7 +2,7 @@
 
 module Nous
   class Fetcher < Command
-    class Error < Command::Error; end
+    class FetchError < StandardError; end
 
     def initialize(seed_url:, extractor: Extractor::Default.new)
       @seed_url = seed_url
@@ -21,14 +21,14 @@ module Nous
 
     def crawl
       result = Crawler.call(seed_url:)
-      raise Error, result.error.message if result.failure?
+      raise FetchError, result.error.message if result.failure?
 
       result.payload
     end
 
     def extract(raw_pages)
       result = ExtractionRunner.call(raw_pages:, extractor:)
-      raise Error, result.error.message if result.failure?
+      raise FetchError, result.error.message if result.failure?
 
       result.payload
     end

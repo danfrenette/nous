@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Nous::ExtractionThread do
+RSpec.describe Nous::Fetcher::ExtractionThread do
   let(:raw_page) { {url: "https://example.com/", pathname: "/", html: fixture("index.html")} }
   let(:config) { instance_double(Nous::Configuration, verbose?: false) }
 

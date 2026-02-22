@@ -2,7 +2,7 @@
 
 module Nous
   class Command
-    class Error < Nous::Error; end
+    class CommandError < StandardError; end
 
     class Result
       attr_reader :payload, :error, :metadata
@@ -27,7 +27,7 @@ module Nous
       command = new(...)
       command.call
     rescue => e
-      return command.failure(Error.new("unexpected: #{e.message}")) if command
+      return command.failure(CommandError.new("unexpected: #{e.message}")) if command
 
       Result.new(success: false, error: e)
     end

@@ -3,9 +3,11 @@
 RSpec.describe Nous::Crawler::LinkExtractor do
   let(:html) { fixture("index.html") }
 
-  before { Nous.configure(seed_url: "https://example.com") }
+  let(:config) { instance_double(Nous::Configuration, match: [], keep_query: false, verbose?: false) }
 
-  let(:url_filter) { Nous::Crawler::UrlFilter.new(Nous.configuration) }
+  before { allow(Nous).to receive(:configuration).and_return(config) }
+
+  let(:url_filter) { Nous::Crawler::UrlFilter.new(seed_uri: URI.parse("https://example.com")) }
 
   subject(:extractor) { described_class.new(url_filter:) }
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Nous::ExtractionRunner do
+RSpec.describe Nous::Fetcher::ExtractionRunner do
   let(:html) { fixture("index.html") }
   let(:raw_pages) do
     [

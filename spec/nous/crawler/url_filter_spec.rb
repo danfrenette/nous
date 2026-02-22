@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 RSpec.describe Nous::Crawler::UrlFilter do
-  let(:config) do
-    Nous::Configuration.new(seed_url: "https://example.com/docs")
-  end
+  let(:config) { instance_double(Nous::Configuration, match: [], keep_query: false) }
+  let(:seed_uri) { URI.parse("https://example.com/docs") }
 
-  subject(:filter) { described_class.new(config) }
+  before { allow(Nous).to receive(:configuration).and_return(config) }
+
+  subject(:filter) { described_class.new(seed_uri:) }
 
   describe "#canonicalize" do
     it "strips fragments" do
@@ -19,8 +20,8 @@ RSpec.describe Nous::Crawler::UrlFilter do
     end
 
     it "preserves query strings when configured" do
-      config = Nous::Configuration.new(seed_url: "https://example.com", keep_query: true)
-      filter = described_class.new(config)
+      allow(config).to receive(:keep_query).and_return(true)
+      filter = described_class.new(seed_uri:)
       uri = URI.parse("https://example.com/page?v=1")
 
       expect(filter.canonicalize(uri)).to eq("https://example.com/page?v=1")
@@ -77,9 +78,7 @@ RSpec.describe Nous::Crawler::UrlFilter do
     end
 
     context "with match patterns" do
-      let(:config) do
-        Nous::Configuration.new(seed_url: "https://example.com", match: ["/docs/*"])
-      end
+      let(:config) { instance_double(Nous::Configuration, match: ["/docs/*"], keep_query: false) }
 
       it "includes matching paths" do
         expect(filter.matches_path?("/docs/intro")).to be true

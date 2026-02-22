@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Nous::Extractor do
+RSpec.describe Nous::Extractor::Default::Client do
   let(:html) { fixture("index.html") }
 
   describe ".call" do

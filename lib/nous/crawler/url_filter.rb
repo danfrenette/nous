@@ -5,10 +5,10 @@ module Nous
     class UrlFilter
       IGNORED_SCHEMES = %w[mailto: javascript: tel:].freeze
 
-      def initialize(config)
-        @host = config.seed.host
-        @match = config.match
-        @keep_query = config.keep_query
+      def initialize(seed_uri:)
+        @host = seed_uri.host
+        @match = Nous.configuration.match
+        @keep_query = Nous.configuration.keep_query
       end
 
       def canonicalize(uri)
