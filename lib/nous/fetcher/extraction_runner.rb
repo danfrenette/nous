@@ -12,11 +12,11 @@ module Nous
 
       def call
         pages = raw_pages.each_slice(Nous.configuration.concurrency).each_with_object([]) do |batch, results|
-          threads = batch.map { |raw| Thread.new { ExtractionThread.new(extractor:, raw_page: raw).call } }
+          threads = batch.map { |raw_page| Thread.new { PageExtractor.call(extractor:, raw_page:) } }
 
           threads.each do |thread|
             result = thread.value
-            results << result if result
+            results << result.payload if result.success?
           end
         end
 

@@ -4,18 +4,18 @@ module Nous
   module Extractor
     class ExtractionError < StandardError; end
 
-    class Default
+    class Default < Command
       def initialize(selector: nil)
         @selector = selector
       end
 
-      def extract(page)
-        extracted = extract_content(page.html)
+      def extract(raw_page)
+        extracted = extract_content(raw_page.html)
         markdown = convert_to_markdown(extracted[:content])
 
-        {title: extracted[:title], content: markdown}
+        success(payload: ExtractedContent.new(title: extracted[:title], content: markdown))
       rescue Client::ExtractionError, Converter::ConversionError => e
-        raise ExtractionError, e.message
+        failure(ExtractionError.new(e.message))
       end
 
       private
