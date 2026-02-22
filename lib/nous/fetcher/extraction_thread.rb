@@ -13,12 +13,12 @@ module Nous
 
         Page.new(
           title: extracted[:title],
-          url: raw_page[:url],
-          pathname: raw_page[:pathname],
+          url: raw_page.url,
+          pathname: raw_page.pathname,
           content: extracted[:content]
         )
       rescue Extractor::ExtractionError => e
-        warn("[nous] extract skip #{raw_page[:url]}: #{e.message}") if Nous.configuration.debug?
+        warn("[nous] extract skip #{raw_page.url}: #{e.message}") if Nous.configuration.debug?
         nil
       end
 

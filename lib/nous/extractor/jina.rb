@@ -8,7 +8,7 @@ module Nous
       end
 
       def extract(page)
-        body = client.get(page[:url])
+        body = client.get(page.url)
 
         {title: body.dig("data", "title") || "", content: body.dig("data", "content") || ""}
       rescue Client::RequestError => e

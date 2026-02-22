@@ -2,7 +2,7 @@
 
 RSpec.describe Nous::Extractor::Default do
   let(:html) { fixture("index.html") }
-  let(:page) { {url: "https://example.com/", pathname: "/", html: html} }
+  let(:page) { Nous::RawPage.new(url: "https://example.com/", pathname: "/", html: html) }
 
   describe "#extract" do
     it "returns title and markdown content" do
@@ -19,7 +19,7 @@ RSpec.describe Nous::Extractor::Default do
     end
 
     it "raises on empty content" do
-      empty_page = {url: "https://example.com/", pathname: "/", html: "<html><body></body></html>"}
+      empty_page = Nous::RawPage.new(url: "https://example.com/", pathname: "/", html: "<html><body></body></html>")
 
       expect { described_class.new.extract(empty_page) }.to raise_error(Nous::Extractor::ExtractionError)
     end

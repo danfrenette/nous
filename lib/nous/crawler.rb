@@ -49,7 +49,7 @@ module Nous
           pages << page
           break if pages.length >= config.limit
 
-          link_extractor.extract(page[:url], page[:html]).each do |url|
+          link_extractor.extract(page.url, page.html).each do |url|
             next if seen.include?(url)
 
             seen << url

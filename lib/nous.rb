@@ -3,6 +3,7 @@
 require "zeitwerk"
 
 loader = Zeitwerk::Loader.for_gem
+loader.collapse("#{__dir__}/nous/primitives")
 loader.setup
 
 module Nous

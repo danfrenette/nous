@@ -15,7 +15,7 @@ module Nous
           return skip(url, "status #{response.status}") unless response.status == 200
           return skip(url, "non-html content") unless html?(response)
 
-          {url:, pathname: URI.parse(url).path, html: response.read}
+          RawPage.new(url:, pathname: URI.parse(url).path, html: response.read)
         ensure
           response&.close
         end

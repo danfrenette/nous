@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Nous::Extractor::Jina do
-  let(:page) { {url: "https://example.com/test", pathname: "/test", html: "<html></html>"} }
+  let(:page) { Nous::RawPage.new(url: "https://example.com/test", pathname: "/test", html: "<html></html>") }
   let(:jina_response) do
     {
       code: 200,

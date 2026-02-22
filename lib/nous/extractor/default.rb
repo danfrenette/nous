@@ -10,7 +10,7 @@ module Nous
       end
 
       def extract(page)
-        extracted = extract_content(page[:html])
+        extracted = extract_content(page.html)
         markdown = convert_to_markdown(extracted[:content])
 
         {title: extracted[:title], content: markdown}
