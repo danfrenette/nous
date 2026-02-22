@@ -5,14 +5,12 @@ module Nous
     class PageFetcher
       HTML_CONTENT_TYPES = %w[text/html application/xhtml+xml].freeze
 
-      def initialize(client:, timeout:, verbose: false)
+      def initialize(client:)
         @client = client
-        @timeout = timeout
-        @verbose = verbose
       end
 
       def fetch(url)
-        Async::Task.current.with_timeout(timeout) do
+        Async::Task.current.with_timeout(config.timeout) do
           response = client.get(url, {})
           return skip(url, "status #{response.status}") unless response.status == 200
           return skip(url, "non-html content") unless html?(response)
@@ -22,14 +20,18 @@ module Nous
           response&.close
         end
       rescue Async::TimeoutError
-        skip(url, "timeout after #{timeout}s")
+        skip(url, "timeout after #{config.timeout}s")
       rescue IOError, SocketError, Errno::ECONNREFUSED => e
         skip(url, e.message)
       end
 
       private
 
-      attr_reader :client, :timeout, :verbose
+      attr_reader :client
+
+      def config
+        Nous.configuration
+      end
 
       def html?(response)
         content_type = response.headers["content-type"].to_s
@@ -37,7 +39,7 @@ module Nous
       end
 
       def skip(url, reason)
-        warn("[nous] skip #{url}: #{reason}") if verbose
+        warn("[nous] skip #{url}: #{reason}") if config.verbose?
         nil
       end
     end

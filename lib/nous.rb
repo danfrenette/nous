@@ -6,19 +6,31 @@ loader = Zeitwerk::Loader.for_gem
 loader.setup
 
 module Nous
-  module_function
+  class << self
+    attr_reader :configuration
 
-  def fetch(seed_url, **options)
-    result = Fetcher.call(seed_url:, **options)
-    raise result.error if result.failure?
+    def configure(seed_url:, **options)
+      @configuration = Configuration.new(seed_url:, **options)
+    end
 
-    result.payload
-  end
+    def reset_configuration!
+      @configuration = nil
+    end
 
-  def serialize(pages, format: :text)
-    result = Serializer.call(pages:, format:)
-    raise result.error if result.failure?
+    def fetch(seed_url, extractor: Extractor::Default.new, **options)
+      configure(seed_url:, **options)
 
-    result.payload
+      result = Fetcher.call(seed_url:, extractor:)
+      raise result.error if result.failure?
+
+      result.payload
+    end
+
+    def serialize(pages, format: :text)
+      result = Serializer.call(pages:, format:)
+      raise result.error if result.failure?
+
+      result.payload
+    end
   end
 end

@@ -2,6 +2,9 @@
 
 RSpec.describe Nous::ExtractionThread do
   let(:raw_page) { {url: "https://example.com/", pathname: "/", html: fixture("index.html")} }
+  let(:config) { instance_double(Nous::Configuration, verbose?: false) }
+
+  before { allow(Nous).to receive(:configuration).and_return(config) }
 
   describe "#call" do
     it "returns a Page from a successful extraction" do
@@ -24,9 +27,11 @@ RSpec.describe Nous::ExtractionThread do
     end
 
     it "logs the skip reason when verbose" do
+      allow(config).to receive(:verbose?).and_return(true)
+
       empty_page = {url: "https://example.com/empty", pathname: "/empty", html: "<html><body></body></html>"}
       extractor = Nous::Extractor::Default.new
-      thread = described_class.new(extractor:, raw_page: empty_page, verbose: true)
+      thread = described_class.new(extractor:, raw_page: empty_page)
 
       expect { thread.call }.to output(/extract skip/).to_stderr
     end

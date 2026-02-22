@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Nous::Crawler::Configuration do
+RSpec.describe Nous::Configuration do
   describe "#initialize" do
     it "parses a valid seed URL" do
       config = described_class.new(seed_url: "https://example.com")
@@ -10,13 +10,13 @@ RSpec.describe Nous::Crawler::Configuration do
     it "raises on non-http seed URL" do
       expect do
         described_class.new(seed_url: "ftp://example.com")
-      end.to raise_error(Nous::Crawler::Error, /http or https/)
+      end.to raise_error(Nous::Configuration::Error, /http or https/)
     end
 
     it "raises on invalid URI" do
       expect do
         described_class.new(seed_url: "not a url at all :::")
-      end.to raise_error(Nous::Crawler::Error, /invalid seed URL/)
+      end.to raise_error(Nous::Configuration::Error, /invalid seed URL/)
     end
 
     it "clamps concurrency between 1 and 20" do

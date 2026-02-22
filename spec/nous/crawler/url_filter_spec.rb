@@ -2,7 +2,7 @@
 
 RSpec.describe Nous::Crawler::UrlFilter do
   let(:config) do
-    Nous::Crawler::Configuration.new(seed_url: "https://example.com/docs")
+    Nous::Configuration.new(seed_url: "https://example.com/docs")
   end
 
   subject(:filter) { described_class.new(config) }
@@ -19,7 +19,7 @@ RSpec.describe Nous::Crawler::UrlFilter do
     end
 
     it "preserves query strings when configured" do
-      config = Nous::Crawler::Configuration.new(seed_url: "https://example.com", keep_query: true)
+      config = Nous::Configuration.new(seed_url: "https://example.com", keep_query: true)
       filter = described_class.new(config)
       uri = URI.parse("https://example.com/page?v=1")
 
@@ -78,7 +78,7 @@ RSpec.describe Nous::Crawler::UrlFilter do
 
     context "with match patterns" do
       let(:config) do
-        Nous::Crawler::Configuration.new(seed_url: "https://example.com", match: ["/docs/*"])
+        Nous::Configuration.new(seed_url: "https://example.com", match: ["/docs/*"])
       end
 
       it "includes matching paths" do

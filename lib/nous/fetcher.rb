@@ -4,10 +4,9 @@ module Nous
   class Fetcher < Command
     class Error < Command::Error; end
 
-    def initialize(seed_url:, extractor: Extractor::Default.new, **crawler_options)
+    def initialize(seed_url:, extractor: Extractor::Default.new)
       @seed_url = seed_url
       @extractor = extractor
-      @crawler_options = crawler_options
     end
 
     def call
@@ -18,22 +17,20 @@ module Nous
 
     private
 
-    attr_reader :seed_url, :extractor, :crawler_options
+    attr_reader :seed_url, :extractor
 
     def crawl
-      result = Crawler.call(seed_url:, **crawler_options)
+      result = Crawler.call(seed_url:)
       raise Error, result.error.message if result.failure?
 
       result.payload
     end
 
     def extract(raw_pages)
-      ExtractionRunner.new(
-        raw_pages:,
-        extractor:,
-        concurrency: crawler_options.fetch(:concurrency, 3),
-        verbose: crawler_options.fetch(:verbose, false)
-      ).call
+      result = ExtractionRunner.call(raw_pages:, extractor:)
+      raise Error, result.error.message if result.failure?
+
+      result.payload
     end
   end
 end

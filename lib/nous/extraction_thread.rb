@@ -2,10 +2,9 @@
 
 module Nous
   class ExtractionThread
-    def initialize(extractor:, raw_page:, verbose: false)
+    def initialize(extractor:, raw_page:)
       @extractor = extractor
       @raw_page = raw_page
-      @verbose = verbose
     end
 
     def call
@@ -18,12 +17,12 @@ module Nous
         content: extracted[:content]
       )
     rescue Nous::Error => e
-      warn("[nous] extract skip #{raw_page[:url]}: #{e.message}") if verbose
+      warn("[nous] extract skip #{raw_page[:url]}: #{e.message}") if Nous.configuration.verbose?
       nil
     end
 
     private
 
-    attr_reader :extractor, :raw_page, :verbose
+    attr_reader :extractor, :raw_page
   end
 end

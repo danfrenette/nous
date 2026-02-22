@@ -3,9 +3,8 @@
 module Nous
   class Crawler < Command
     class LinkExtractor
-      def initialize(url_filter:, verbose: false)
+      def initialize(url_filter:)
         @url_filter = url_filter
-        @verbose = verbose
       end
 
       def extract(current_url, html)
@@ -16,7 +15,7 @@ module Nous
 
       private
 
-      attr_reader :url_filter, :verbose
+      attr_reader :url_filter
 
       def anchors(html)
         Nokogiri::HTML(html).css("a[href]").map { |node| node["href"] }
@@ -33,7 +32,7 @@ module Nous
 
         canonical
       rescue URI::InvalidURIError => e
-        warn("[nous] malformed href #{href.inspect}: #{e.message}") if verbose
+        warn("[nous] malformed href #{href.inspect}: #{e.message}") if Nous.configuration.verbose?
         nil
       end
     end

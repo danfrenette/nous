@@ -9,11 +9,13 @@ module Nous
   class Crawler < Command
     class Error < Command::Error; end
 
-    def initialize(seed_url:, **options)
-      @config = Configuration.new(seed_url:, **options)
+    def initialize(seed_url:)
+      @seed_url = seed_url
     end
 
     def call
+      suppress_async_warnings unless config.verbose?
+
       pages = []
       queue = [url_filter.canonicalize(config.seed)]
       seen = Set.new(queue)
@@ -32,7 +34,11 @@ module Nous
 
     private
 
-    attr_reader :config
+    attr_reader :seed_url
+
+    def config
+      Nous.configuration
+    end
 
     def crawl(queue:, seen:, pages:, client:)
       while queue.any? && pages.length < config.limit
@@ -70,11 +76,16 @@ module Nous
     end
 
     def link_extractor
-      @link_extractor ||= LinkExtractor.new(url_filter:, verbose: config.verbose)
+      @link_extractor ||= LinkExtractor.new(url_filter:)
     end
 
     def page_fetcher(client)
-      PageFetcher.new(client:, timeout: config.timeout, verbose: config.verbose)
+      PageFetcher.new(client:)
+    end
+
+    def suppress_async_warnings
+      require "console"
+      Console.logger.level = :error
     end
   end
 end
