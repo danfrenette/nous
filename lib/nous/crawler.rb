@@ -47,6 +47,7 @@ module Nous
         fetch_batch(batch, client).each do |page|
           next unless page
 
+          seen << page.url
           pages << page
           break if pages.length >= config.limit
 
@@ -81,7 +82,7 @@ module Nous
     end
 
     def page_fetcher(client)
-      PageFetcher.new(client:)
+      PageFetcher.new(client:, seed_host: seed_uri.host)
     end
 
     def suppress_async_warnings
@@ -90,11 +91,11 @@ module Nous
     end
 
     def parse_seed!(url)
-      uri = URI.parse(url)
-      raise CrawlError, "seed URL must be http or https" unless uri.is_a?(URI::HTTP)
+      parsed = Url.new(url)
+      raise CrawlError, "seed URL must be http or https" unless parsed.http?
 
-      uri
-    rescue URI::InvalidURIError => e
+      parsed
+    rescue ArgumentError => e
       raise CrawlError, "invalid seed URL: #{e.message}"
     end
   end

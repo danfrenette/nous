@@ -5,17 +5,21 @@ module Nous
     class PageFetcher
       HTML_CONTENT_TYPES = %w[text/html application/xhtml+xml].freeze
 
-      def initialize(client:)
+      def initialize(client:, seed_host:)
         @client = client
+        @seed_host = seed_host
       end
 
       def fetch(url)
         Async::Task.current.with_timeout(config.timeout) do
-          response = client.get(url, {})
+          result = RedirectFollower.call(client:, seed_host:, url:)
+          return skip(url, result.error.message) if result.failure?
+
+          response, final_url = result.payload
           return skip(url, "status #{response.status}") unless response.status == 200
           return skip(url, "non-html content") unless html?(response)
 
-          RawPage.new(url:, pathname: URI.parse(url).path, html: response.read)
+          RawPage.new(url: final_url.to_s, pathname: final_url.path, html: response.read)
         ensure
           response&.close
         end
@@ -27,7 +31,7 @@ module Nous
 
       private
 
-      attr_reader :client
+      attr_reader :client, :seed_host
 
       def config
         Nous.configuration

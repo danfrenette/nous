@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     nous (0.2.0)
+      addressable (~> 2.8)
       async (~> 2.24)
       async-http (~> 0.88)
       faraday (~> 2.12)

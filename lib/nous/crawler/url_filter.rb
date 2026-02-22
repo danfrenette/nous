@@ -25,8 +25,8 @@ module Nous
         IGNORED_SCHEMES.none? { |s| href.start_with?(s) }
       end
 
-      def same_host?(uri)
-        uri.is_a?(URI::HTTP) && uri.host == host
+      def same_host?(url)
+        url.http? && url.host == host
       end
 
       def matches_path?(path)

@@ -8,9 +8,7 @@ module Nous
       end
 
       def extract(current_url, html)
-        base_uri = URI.parse(current_url)
-
-        anchors(html).filter_map { |href| resolve(base_uri, href) }.uniq
+        anchors(html).filter_map { |href| resolve(current_url, href) }.uniq
       end
 
       private
@@ -21,19 +19,19 @@ module Nous
         Nokogiri::HTML(html).css("a[href]").map { |node| node["href"] }
       end
 
-      def resolve(base_uri, href)
+      def resolve(current_url, href)
         return unless url_filter.allowed?(href)
 
-        uri = URI.join(base_uri, href)
-        return unless url_filter.same_host?(uri)
+        result = UrlResolver.call(base_url: current_url, href:)
+        return unless result.success?
 
-        canonical = url_filter.canonicalize(uri)
-        return unless url_filter.matches_path?(URI.parse(canonical).path)
+        url = result.payload
+        return unless url_filter.same_host?(url)
+
+        canonical = url_filter.canonicalize(url)
+        return unless url_filter.matches_path?(Url.new(canonical).path)
 
         canonical
-      rescue URI::InvalidURIError => e
-        warn("[nous] malformed href #{href.inspect}: #{e.message}") if Nous.configuration.debug?
-        nil
       end
     end
   end

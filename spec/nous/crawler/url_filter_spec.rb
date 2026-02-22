@@ -2,7 +2,7 @@
 
 RSpec.describe Nous::Crawler::UrlFilter do
   let(:config) { instance_double(Nous::Configuration, match: [], keep_query: false) }
-  let(:seed_uri) { URI.parse("https://example.com/docs") }
+  let(:seed_uri) { Nous::Url.new("https://example.com/docs") }
 
   before { allow(Nous).to receive(:configuration).and_return(config) }
 
@@ -57,18 +57,18 @@ RSpec.describe Nous::Crawler::UrlFilter do
 
   describe "#same_host?" do
     it "accepts same host" do
-      uri = URI.parse("https://example.com/other")
-      expect(filter.same_host?(uri)).to be true
+      url = Nous::Url.new("https://example.com/other")
+      expect(filter.same_host?(url)).to be true
     end
 
     it "rejects different host" do
-      uri = URI.parse("https://other.com/page")
-      expect(filter.same_host?(uri)).to be false
+      url = Nous::Url.new("https://other.com/page")
+      expect(filter.same_host?(url)).to be false
     end
 
     it "rejects non-HTTP URIs" do
-      uri = URI.parse("ftp://example.com/file")
-      expect(filter.same_host?(uri)).to be false
+      url = Nous::Url.new("ftp://example.com/file")
+      expect(filter.same_host?(url)).to be false
     end
   end
 
