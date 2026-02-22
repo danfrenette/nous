@@ -1,6 +1,6 @@
 # Nous
 
-Crawl websites and extract readable Markdown, optimized for LLM consumption.
+Crawl websites and extract readable Markdown, optimized for LLM consumption. Inspired by [sitefetch](https://github.com/egoist/sitefetch).
 
 Nous fetches same-host pages starting from a seed URL, extracts readable content, and outputs clean Markdown as XML-tagged text or JSON. It supports concurrent crawling, glob-based URL filtering, and two extraction backends: a local parser (ruby-readability) and the Jina Reader API for JS-rendered sites.
 
