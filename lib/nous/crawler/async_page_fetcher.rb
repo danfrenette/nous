@@ -2,7 +2,7 @@
 
 module Nous
   class Crawler < Command
-    class PageFetcher
+    class AsyncPageFetcher
       HTML_CONTENT_TYPES = %w[text/html application/xhtml+xml].freeze
 
       def initialize(client:, seed_host:)

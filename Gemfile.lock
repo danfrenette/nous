@@ -1,11 +1,12 @@
 PATH
   remote: .
   specs:
-    nous (0.2.0)
+    nous (0.3.0)
       addressable (~> 2.8)
       async (~> 2.24)
       async-http (~> 0.88)
       faraday (~> 2.12)
+      faraday-follow_redirects (~> 0.5)
       faraday-retry (~> 2.2)
       nokogiri (~> 1.16)
       reverse_markdown (~> 3.0)
@@ -50,6 +51,8 @@ GEM
       faraday-net_http (>= 2.0, < 3.5)
       json
       logger
+    faraday-follow_redirects (0.5.0)
+      faraday (>= 1, < 3)
     faraday-net_http (3.4.2)
       net-http (~> 0.5)
     faraday-retry (2.4.0)

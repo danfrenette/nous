@@ -136,6 +136,7 @@ Extracted markdown content...
 bin/setup               # Install dependencies
 bundle exec rspec       # Run tests
 bundle exec standardrb  # Lint
+bundle exec exe/nous    # Run the command line in-development
 ```
 
 ## License

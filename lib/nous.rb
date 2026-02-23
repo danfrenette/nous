@@ -10,8 +10,8 @@ module Nous
   class << self
     attr_reader :configuration
 
-    def configure(**options)
-      @configuration = Configuration.new(**options)
+    def configure(...)
+      @configuration = ConfigurationBuilder.call(...)
     end
 
     def reset_configuration!

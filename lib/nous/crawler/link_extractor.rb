@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "nokogiri"
+
 module Nous
   class Crawler < Command
     class LinkExtractor

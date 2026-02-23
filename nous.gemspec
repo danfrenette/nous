@@ -35,6 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "async", "~> 2.24"
   spec.add_dependency "async-http", "~> 0.88"
   spec.add_dependency "faraday", "~> 2.12"
+  spec.add_dependency "faraday-follow_redirects", "~> 0.5"
   spec.add_dependency "faraday-retry", "~> 2.2"
   spec.add_dependency "nokogiri", "~> 1.16"
   spec.add_dependency "reverse_markdown", "~> 3.0"
