@@ -64,13 +64,15 @@ nous https://example.com -d
 
 ## Ruby API
 
+### Basic Usage
+
 ```ruby
 require "nous"
 
 # Fetch pages with the default extractor
 pages = Nous.fetch("https://example.com", limit: 10, concurrency: 3)
 
-# Each page is a Nous::Page with title, url, pathname, content
+# Each page is a Nous::Page with title, url, pathname, content, metadata
 pages.each do |page|
   puts "#{page.title} (#{page.url})"
   puts page.content
@@ -89,11 +91,70 @@ pages = Nous.fetch("https://spa-site.com",
 )
 ```
 
+### Detailed Results
+
+Use the `details: true` option to receive full fetch results including failures:
+
+```ruby
+result = Nous.fetch("https://example.com", details: true)
+
+result.pages       # Array<Nous::Page> - successfully extracted pages
+result.failures    # Array<{requested_url:, error:}> - failed fetches
+result.total_requested  # Integer - total URLs attempted
+result.all_succeeded?   # Boolean - true if no failures
+result.any_succeeded?   # Boolean - true if at least one page extracted
+```
+
+This is useful when you need to handle failures explicitly:
+
+```ruby
+result = Nous.fetch("https://example.com/api-docs", details: true)
+
+if result.failures.any?
+  puts "Failed to fetch:"
+  result.failures.each do |failure|
+    puts "  #{failure[:requested_url]}: #{failure[:error]}"
+  end
+end
+
+result.pages.each do |page|
+  puts "Successfully extracted: #{page.title}"
+end
+```
+
+### Page Structure
+
+Each extracted page contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | String | Page title (fallback chain: readability → `<title>` tag → `<h1>`) |
+| `url` | String | Final URL after redirects |
+| `pathname` | String | URL path component |
+| `content` | String | Extracted content as Markdown |
+| `metadata` | Hash | Provenance information (see below) |
+
+### Page Metadata
+
+```ruby
+page.metadata  # => {
+  #   extractor: "Nous::Extractor::Default",  # Which extractor was used
+  #   requested_url: "https://example.com/blog", # Original URL before redirects
+  #   content_type: "text/html; charset=utf-8",  # HTTP Content-Type header
+  #   redirected: true                           # Whether redirects occurred
+  # }
+```
+
 ## Extraction Backends
 
 ### Default (ruby-readability)
 
-Parses static HTML using [ruby-readability](https://github.com/cantino/ruby-readability), strips noisy elements (nav, footer, script, header), and converts to Markdown via [reverse_markdown](https://github.com/xijo/reverse_markdown). Fast and requires no external services, but cannot extract content from JS-rendered pages.
+Parses static HTML using [ruby-readability](https://github.com/cantino/ruby-readability), strips noisy elements (script, style, nav, footer), and converts to Markdown via [reverse_markdown](https://github.com/xijo/reverse_markdown). Fast and requires no external services, but cannot extract content from JS-rendered pages.
+
+Title extraction uses a fallback chain:
+1. Readability's extracted title
+2. Original `<title>` tag from HTML
+3. First `<h1>` from extracted content
 
 ### Jina Reader API
 
@@ -107,13 +168,15 @@ XML-tagged output designed for LLM context windows:
 
 ```xml
 <page>
-<title>Page Title</title>
-<url>https://example.com/page</url>
-<content>
+  <title>Page Title</title>
+  <url>https://example.com/page</url>
+  <pathname>/page</pathname>
+  <extractor>Nous::Extractor::Default</extractor>
+  <content>
 # Heading
 
 Extracted markdown content...
-</content>
+  </content>
 </page>
 ```
 
@@ -125,7 +188,13 @@ Extracted markdown content...
     "title": "Page Title",
     "url": "https://example.com/page",
     "pathname": "/page",
-    "content": "# Heading\n\nExtracted markdown content..."
+    "content": "# Heading\n\nExtracted markdown content...",
+    "metadata": {
+      "extractor": "Nous::Extractor::Default",
+      "requested_url": "https://example.com/page",
+      "content_type": "text/html; charset=utf-8",
+      "redirected": false
+    }
   }
 ]
 ```
