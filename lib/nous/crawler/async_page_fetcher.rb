@@ -13,26 +13,30 @@ module Nous
       def fetch(url)
         Async::Task.current.with_timeout(config.timeout) do
           result = RedirectFollower.call(client:, seed_host:, url:)
-          return skip(url, result.error.message) if result.failure?
+          return build_failed_record(url, result.error.message) if result.failure?
 
           response, final_url = result.payload
-          return skip(url, "status #{response.status}") unless response.status == 200
-          return skip(url, "non-html content") unless html?(response)
+          content_type = response.headers["content-type"].to_s
+          redirected = final_url.to_s != url
 
-          RawPage.new(
-            url: final_url.to_s,
+          return build_failed_record(url, "status #{response.status}") unless response.status == 200
+          return build_failed_record(url, "non-html content") unless html?(content_type)
+
+          build_success_record(
+            url: url,
+            final_url: final_url.to_s,
             pathname: final_url.path,
             html: response.read,
-            requested_url: url,
-            content_type: response.headers["content-type"].to_s
+            content_type: content_type,
+            redirected: redirected
           )
         ensure
           response&.close
         end
       rescue Async::TimeoutError
-        skip(url, "timeout after #{config.timeout}s")
+        build_failed_record(url, "timeout after #{config.timeout}s")
       rescue IOError, SocketError, Errno::ECONNREFUSED => e
-        skip(url, e.message)
+        build_failed_record(url, e.message)
       end
 
       private
@@ -43,14 +47,36 @@ module Nous
         Nous.configuration
       end
 
-      def html?(response)
-        content_type = response.headers["content-type"].to_s
+      def html?(content_type)
         HTML_CONTENT_TYPES.any? { |type| content_type.include?(type) }
       end
 
-      def skip(url, reason)
-        warn("[nous] skip #{url}: #{reason}") if config.debug?
-        nil
+      def build_success_record(url:, final_url:, pathname:, html:, content_type:, redirected:)
+        FetchRecord.new(
+          requested_url: url,
+          final_url: final_url,
+          pathname: pathname,
+          html: html,
+          content_type: content_type,
+          ok: true,
+          error: nil,
+          redirected: redirected
+        )
+      end
+
+      def build_failed_record(url, error)
+        FetchRecord.new(
+          requested_url: url,
+          final_url: nil,
+          pathname: Url.new(url).path,
+          html: nil,
+          content_type: nil,
+          ok: false,
+          error: error,
+          redirected: false
+        ).tap do |record|
+          warn("[nous] skip #{url}: #{error}") if config.debug?
+        end
       end
     end
   end

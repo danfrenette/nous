@@ -8,17 +8,24 @@ module Nous
       @seed_url = seed_url
       @extractor = extractor
       @http_client = http_client
+      @single_page = Nous.configuration.single_page?
     end
 
     def call
-      raw_pages = crawl
-      pages = extract(raw_pages)
+      records = crawl
+      successful, failed = records.partition(&:ok)
+
+      if single_page && successful.empty?
+        raise FetchError, failed.first&.error || "fetch failed"
+      end
+
+      pages = extract(successful)
       success(payload: pages)
     end
 
     private
 
-    attr_reader :seed_url, :extractor, :http_client
+    attr_reader :seed_url, :extractor, :http_client, :single_page
 
     def crawl
       result = Crawler.call(seed_url:, http_client:)
@@ -27,8 +34,8 @@ module Nous
       result.payload
     end
 
-    def extract(raw_pages)
-      result = ExtractionRunner.call(raw_pages:, extractor:)
+    def extract(records)
+      result = ExtractionRunner.call(records:, extractor:)
       raise FetchError, result.error.message if result.failure?
 
       result.payload

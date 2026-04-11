@@ -9,8 +9,8 @@ module Nous
         @selector = selector
       end
 
-      def extract(raw_page)
-        extracted = extract_content(raw_page.html)
+      def extract(record)
+        extracted = extract_content(record.html)
         markdown = convert_to_markdown(extracted[:content])
 
         success(payload: ExtractedContent.new(title: extracted[:title], content: markdown))

@@ -2,19 +2,22 @@
 
 RSpec.describe Nous::Extractor::Default do
   let(:html) { fixture("index.html") }
-  let(:raw_page) do
-    Nous::RawPage.new(
-      url: "https://example.com/",
+  let(:record) do
+    Nous::FetchRecord.new(
+      requested_url: "https://example.com/",
+      final_url: "https://example.com/",
       pathname: "/",
       html: html,
-      requested_url: "https://example.com/",
-      content_type: "text/html"
+      content_type: "text/html",
+      ok: true,
+      error: nil,
+      redirected: false
     )
   end
 
   describe "#extract" do
     it "returns a successful result with extracted content" do
-      result = described_class.new.extract(raw_page)
+      result = described_class.new.extract(record)
 
       expect(result).to be_success
       expect(result.payload).to be_a(Nous::ExtractedContent)
@@ -23,21 +26,24 @@ RSpec.describe Nous::Extractor::Default do
     end
 
     it "respects the selector option" do
-      result = described_class.new(selector: "article").extract(raw_page)
+      result = described_class.new(selector: "article").extract(record)
 
       expect(result).to be_success
       expect(result.payload.content).to include("main content")
     end
 
     it "returns a failure result on empty content" do
-      empty_page = Nous::RawPage.new(
-        url: "https://example.com/",
+      empty_record = Nous::FetchRecord.new(
+        requested_url: "https://example.com/",
+        final_url: "https://example.com/",
         pathname: "/",
         html: "<html><body></body></html>",
-        requested_url: "https://example.com/",
-        content_type: "text/html"
+        content_type: "text/html",
+        ok: true,
+        error: nil,
+        redirected: false
       )
-      result = described_class.new.extract(empty_page)
+      result = described_class.new.extract(empty_record)
 
       expect(result).to be_failure
       expect(result.error).to be_a(Nous::Extractor::ExtractionError)

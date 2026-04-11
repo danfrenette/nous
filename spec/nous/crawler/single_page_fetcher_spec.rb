@@ -16,7 +16,7 @@ RSpec.describe Nous::Crawler::SinglePageFetcher do
 
   describe ".call" do
     context "when the page is valid HTML" do
-      it "returns a success result with a single-element RawPage array" do
+      it "returns a success result with a single-element FetchRecord array" do
         response = stub_response(status: 200, body: "<html><body>hello</body></html>",
           headers: {"content-type" => "text/html"})
         allow(connection).to receive(:get).with(url).and_return(response)
@@ -26,13 +26,15 @@ RSpec.describe Nous::Crawler::SinglePageFetcher do
         expect(result).to be_success
         expect(result.payload.length).to eq(1)
 
-        page = result.payload.first
-        expect(page).to be_a(Nous::RawPage)
-        expect(page.url).to eq(url)
-        expect(page.pathname).to eq("/blog")
-        expect(page.html).to eq("<html><body>hello</body></html>")
-        expect(page.requested_url).to eq(url)
-        expect(page.content_type).to eq("text/html")
+        record = result.payload.first
+        expect(record).to be_a(Nous::FetchRecord)
+        expect(record.final_url).to eq(url)
+        expect(record.pathname).to eq("/blog")
+        expect(record.html).to eq("<html><body>hello</body></html>")
+        expect(record.requested_url).to eq(url)
+        expect(record.content_type).to eq("text/html")
+        expect(record.ok).to be true
+        expect(record.redirected).to be false
       end
     end
 
@@ -58,11 +60,12 @@ RSpec.describe Nous::Crawler::SinglePageFetcher do
         result = described_class.call(url:, http_client: connection)
 
         expect(result).to be_success
-        page = result.payload.first
-        expect(page.url).to eq(final)
-        expect(page.pathname).to eq("/blog/")
-        expect(page.requested_url).to eq(url)
-        expect(page.content_type).to eq("text/html")
+        record = result.payload.first
+        expect(record.final_url).to eq(final)
+        expect(record.pathname).to eq("/blog/")
+        expect(record.requested_url).to eq(url)
+        expect(record.content_type).to eq("text/html")
+        expect(record.redirected).to be true
       end
     end
 
@@ -74,9 +77,10 @@ RSpec.describe Nous::Crawler::SinglePageFetcher do
 
         result = described_class.call(url:, http_client: connection)
 
-        expect(result).to be_failure
-        expect(result.error).to be_a(described_class::FetchError)
-        expect(result.error.message).to match(/outside example\.com/)
+        expect(result).to be_success
+        record = result.payload.first
+        expect(record.ok).to be false
+        expect(record.error).to match(/outside example\.com/)
       end
     end
 
@@ -88,9 +92,10 @@ RSpec.describe Nous::Crawler::SinglePageFetcher do
 
         result = described_class.call(url:, http_client: connection)
 
-        expect(result).to be_failure
-        expect(result.error).to be_a(described_class::FetchError)
-        expect(result.error.message).to match(/non-html content/)
+        expect(result).to be_success
+        record = result.payload.first
+        expect(record.ok).to be false
+        expect(record.error).to match(/non-html content/)
       end
     end
 
@@ -100,8 +105,10 @@ RSpec.describe Nous::Crawler::SinglePageFetcher do
 
         result = described_class.call(url:, http_client: connection)
 
-        expect(result).to be_failure
-        expect(result.error).to be_a(described_class::FetchError)
+        expect(result).to be_success
+        record = result.payload.first
+        expect(record.ok).to be false
+        expect(record.error).to eq("connection refused")
       end
     end
 
@@ -111,8 +118,10 @@ RSpec.describe Nous::Crawler::SinglePageFetcher do
 
         result = described_class.call(url:, http_client: connection)
 
-        expect(result).to be_failure
-        expect(result.error).to be_a(described_class::FetchError)
+        expect(result).to be_success
+        record = result.payload.first
+        expect(record.ok).to be false
+        expect(record.error).to eq("timeout")
       end
     end
   end

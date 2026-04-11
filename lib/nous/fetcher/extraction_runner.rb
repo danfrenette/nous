@@ -5,14 +5,14 @@ module Nous
     class ExtractionRunner < Command
       class ExtractionError < StandardError; end
 
-      def initialize(raw_pages:, extractor:)
-        @raw_pages = raw_pages
+      def initialize(records:, extractor:)
+        @records = records
         @extractor = extractor
       end
 
       def call
-        pages = raw_pages.each_slice(Nous.configuration.concurrency).each_with_object([]) do |batch, results|
-          threads = batch.map { |raw_page| Thread.new { PageExtractor.call(extractor:, raw_page:) } }
+        pages = records.each_slice(Nous.configuration.concurrency).each_with_object([]) do |batch, results|
+          threads = batch.map { |record| Thread.new { PageExtractor.call(extractor:, record:) } }
 
           threads.each do |thread|
             result = thread.value
@@ -25,7 +25,7 @@ module Nous
 
       private
 
-      attr_reader :raw_pages, :extractor
+      attr_reader :records, :extractor
     end
   end
 end

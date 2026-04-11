@@ -12,5 +12,6 @@ module Nous
   ) do
     def debug? = debug
     def recursive? = recursive
+    def single_page? = !recursive
   end
 end

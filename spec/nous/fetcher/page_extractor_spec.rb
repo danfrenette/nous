@@ -1,13 +1,16 @@
 # frozen_string_literal: true
 
 RSpec.describe Nous::Fetcher::PageExtractor do
-  let(:raw_page) do
-    Nous::RawPage.new(
-      url: "https://example.com/",
+  let(:record) do
+    Nous::FetchRecord.new(
+      requested_url: "https://example.com/",
+      final_url: "https://example.com/",
       pathname: "/",
       html: fixture("index.html"),
-      requested_url: "https://example.com/",
-      content_type: "text/html"
+      content_type: "text/html",
+      ok: true,
+      error: nil,
+      redirected: false
     )
   end
   let(:config) { instance_double(Nous::Configuration, debug?: false) }
@@ -16,7 +19,7 @@ RSpec.describe Nous::Fetcher::PageExtractor do
 
   describe ".call" do
     it "returns a successful result with a Page" do
-      result = described_class.call(extractor: Nous::Extractor::Default.new, raw_page:)
+      result = described_class.call(extractor: Nous::Extractor::Default.new, record:)
 
       expect(result).to be_success
       expect(result.payload).to be_a(Nous::Page)
@@ -27,15 +30,18 @@ RSpec.describe Nous::Fetcher::PageExtractor do
     end
 
     it "returns a failure result when extraction fails" do
-      empty_page = Nous::RawPage.new(
-        url: "https://example.com/empty",
+      empty_record = Nous::FetchRecord.new(
+        requested_url: "https://example.com/empty",
+        final_url: "https://example.com/empty",
         pathname: "/empty",
         html: "<html><body></body></html>",
-        requested_url: "https://example.com/empty",
-        content_type: "text/html"
+        content_type: "text/html",
+        ok: true,
+        error: nil,
+        redirected: false
       )
 
-      result = described_class.call(extractor: Nous::Extractor::Default.new, raw_page: empty_page)
+      result = described_class.call(extractor: Nous::Extractor::Default.new, record: empty_record)
 
       expect(result).to be_failure
     end
@@ -43,16 +49,19 @@ RSpec.describe Nous::Fetcher::PageExtractor do
     it "logs the skip reason when debug" do
       allow(config).to receive(:debug?).and_return(true)
 
-      empty_page = Nous::RawPage.new(
-        url: "https://example.com/empty",
+      empty_record = Nous::FetchRecord.new(
+        requested_url: "https://example.com/empty",
+        final_url: "https://example.com/empty",
         pathname: "/empty",
         html: "<html><body></body></html>",
-        requested_url: "https://example.com/empty",
-        content_type: "text/html"
+        content_type: "text/html",
+        ok: true,
+        error: nil,
+        redirected: false
       )
 
       expect {
-        described_class.call(extractor: Nous::Extractor::Default.new, raw_page: empty_page)
+        described_class.call(extractor: Nous::Extractor::Default.new, record: empty_record)
       }.to output(/extract skip/).to_stderr
     end
   end

@@ -9,7 +9,7 @@ module Nous
       def initialize(seed_url:, http_client: nil)
         @seed_uri = Url.new(seed_url)
         @http_client = http_client
-        @pages = []
+        @records = []
         @queue = [url_filter.canonicalize(seed_uri)]
         @seen = Set.new(queue)
       end
@@ -21,12 +21,12 @@ module Nous
           crawl(client)
         end
 
-        success(payload: pages)
+        success(payload: records)
       end
 
       private
 
-      attr_reader :seed_uri, :http_client, :pages, :queue, :seen
+      attr_reader :seed_uri, :http_client, :records, :queue, :seen
 
       def config
         Nous.configuration
@@ -37,13 +37,13 @@ module Nous
       end
 
       def fetch_and_enqueue(batch, client)
-        fetch_batch(batch, client).each do |page|
-          next unless page
+        fetch_batch(batch, client).each do |record|
+          next unless record.ok
           break unless within_limit?
 
-          pages << page
-          seen << page.url
-          enqueue_links(page)
+          records << record
+          seen << record.final_url
+          enqueue_links(record)
         end
       end
 
@@ -59,8 +59,8 @@ module Nous
         tasks.map(&:wait)
       end
 
-      def enqueue_links(page)
-        link_extractor.extract(page.url, page.html).each do |url|
+      def enqueue_links(record)
+        link_extractor.extract(record.final_url, record.html).each do |url|
           next if seen.include?(url)
 
           seen << url
@@ -69,7 +69,7 @@ module Nous
       end
 
       def within_limit?
-        pages.length < config.limit
+        records.count(&:ok) < config.limit
       end
 
       def open_connection
@@ -91,7 +91,7 @@ module Nous
       end
 
       def link_extractor
-        @link_extractor ||= LinkExtractor.new(url_filter:)
+        @link_filter ||= LinkExtractor.new(url_filter:)
       end
 
       def suppress_async_warnings

@@ -1,13 +1,16 @@
 # frozen_string_literal: true
 
 RSpec.describe Nous::Extractor::Jina do
-  let(:raw_page) do
-    Nous::RawPage.new(
-      url: "https://example.com/test",
+  let(:record) do
+    Nous::FetchRecord.new(
+      requested_url: "https://example.com/test",
+      final_url: "https://example.com/test",
       pathname: "/test",
       html: "<html></html>",
-      requested_url: "https://example.com/test",
-      content_type: "text/html"
+      content_type: "text/html",
+      ok: true,
+      error: nil,
+      redirected: false
     )
   end
   let(:jina_response) do
@@ -31,7 +34,7 @@ RSpec.describe Nous::Extractor::Jina do
 
   describe "#extract" do
     it "returns a successful result with extracted content" do
-      result = extractor.extract(raw_page)
+      result = extractor.extract(record)
 
       expect(result).to be_success
       expect(result.payload).to be_a(Nous::ExtractedContent)
@@ -40,14 +43,14 @@ RSpec.describe Nous::Extractor::Jina do
     end
 
     it "sends the correct headers" do
-      extractor.extract(raw_page)
+      extractor.extract(record)
 
       expect(WebMock).to have_requested(:get, "https://r.jina.ai/https://example.com/test")
         .with(headers: {"Accept" => "application/json", "X-No-Cache" => "true"})
     end
 
     it "includes authorization header when api_key is provided" do
-      described_class.new(api_key: "test-key", retry_interval: 0).extract(raw_page)
+      described_class.new(api_key: "test-key", retry_interval: 0).extract(record)
 
       expect(WebMock).to have_requested(:get, "https://r.jina.ai/https://example.com/test")
         .with(headers: {"Authorization" => "Bearer test-key"})
@@ -57,7 +60,7 @@ RSpec.describe Nous::Extractor::Jina do
       stub_request(:get, "https://r.jina.ai/https://example.com/test")
         .to_return(status: 429, body: "rate limited")
 
-      result = extractor.extract(raw_page)
+      result = extractor.extract(record)
 
       expect(result).to be_failure
       expect(result.error).to be_a(Nous::Extractor::ExtractionError)
@@ -67,7 +70,7 @@ RSpec.describe Nous::Extractor::Jina do
       stub_request(:get, "https://r.jina.ai/https://example.com/test")
         .to_return(status: 200, body: "not json")
 
-      result = extractor.extract(raw_page)
+      result = extractor.extract(record)
 
       expect(result).to be_failure
       expect(result.error).to be_a(Nous::Extractor::ExtractionError)

@@ -7,8 +7,8 @@ module Nous
         @client = Client.new(api_key: api_key || ENV["JINA_API_KEY"], timeout:, **client_options)
       end
 
-      def extract(raw_page)
-        body = client.get(raw_page.url)
+      def extract(record)
+        body = client.get(record.final_url)
 
         success(payload: ExtractedContent.new(
           title: body.dig("data", "title") || "",
