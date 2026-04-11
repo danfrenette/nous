@@ -24,7 +24,13 @@ module Nous
         validate_host!(final_url)
         validate_html!(response)
 
-        raw_page = RawPage.new(url: final_url.to_s, pathname: final_url.path, html: response.body)
+        raw_page = RawPage.new(
+          url: final_url.to_s,
+          pathname: final_url.path,
+          html: response.body,
+          requested_url: url,
+          content_type: response.headers["content-type"].to_s
+        )
         success(payload: [raw_page])
       rescue FetchError => e
         failure(e)

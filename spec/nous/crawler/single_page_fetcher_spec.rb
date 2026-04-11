@@ -31,6 +31,8 @@ RSpec.describe Nous::Crawler::SinglePageFetcher do
         expect(page.url).to eq(url)
         expect(page.pathname).to eq("/blog")
         expect(page.html).to eq("<html><body>hello</body></html>")
+        expect(page.requested_url).to eq(url)
+        expect(page.content_type).to eq("text/html")
       end
     end
 
@@ -59,6 +61,8 @@ RSpec.describe Nous::Crawler::SinglePageFetcher do
         page = result.payload.first
         expect(page.url).to eq(final)
         expect(page.pathname).to eq("/blog/")
+        expect(page.requested_url).to eq(url)
+        expect(page.content_type).to eq("text/html")
       end
     end
 

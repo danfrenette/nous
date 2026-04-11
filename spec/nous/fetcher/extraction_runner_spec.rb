@@ -4,8 +4,8 @@ RSpec.describe Nous::Fetcher::ExtractionRunner do
   let(:html) { fixture("index.html") }
   let(:raw_pages) do
     [
-      Nous::RawPage.new(url: "https://example.com/", pathname: "/", html: html),
-      Nous::RawPage.new(url: "https://example.com/about", pathname: "/about", html: html)
+      Nous::RawPage.new(url: "https://example.com/", pathname: "/", html: html, requested_url: "https://example.com/", content_type: "text/html"),
+      Nous::RawPage.new(url: "https://example.com/about", pathname: "/about", html: html, requested_url: "https://example.com/about", content_type: "text/html")
     ]
   end
   let(:config) { instance_double(Nous::Configuration, concurrency: 3, debug?: false) }
@@ -29,9 +29,9 @@ RSpec.describe Nous::Fetcher::ExtractionRunner do
 
     it "skips pages that fail extraction" do
       mixed = [
-        Nous::RawPage.new(url: "https://example.com/good", pathname: "/good", html: html),
-        Nous::RawPage.new(url: "https://example.com/bad", pathname: "/bad", html: "<html><body></body></html>"),
-        Nous::RawPage.new(url: "https://example.com/also-good", pathname: "/also-good", html: html)
+        Nous::RawPage.new(url: "https://example.com/good", pathname: "/good", html: html, requested_url: "https://example.com/good", content_type: "text/html"),
+        Nous::RawPage.new(url: "https://example.com/bad", pathname: "/bad", html: "<html><body></body></html>", requested_url: "https://example.com/bad", content_type: "text/html"),
+        Nous::RawPage.new(url: "https://example.com/also-good", pathname: "/also-good", html: html, requested_url: "https://example.com/also-good", content_type: "text/html")
       ]
 
       result = described_class.call(raw_pages: mixed, extractor: Nous::Extractor::Default.new)

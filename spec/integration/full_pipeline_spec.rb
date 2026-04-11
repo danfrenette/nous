@@ -55,6 +55,9 @@ RSpec.describe "Full pipeline integration" do
       expect(index_page).not_to be_nil
       expect(index_page.title).to eq("Test Site")
       expect(index_page.content).to include("main content")
+      expect(index_page.metadata[:extractor]).to eq("Nous::Extractor::Default")
+      expect(index_page.metadata[:requested_url]).to eq("https://example.com/")
+      expect(index_page.metadata[:content_type]).to eq("text/html; charset=utf-8")
 
       about_page = pages.find { |p| p.pathname == "/about" }
       expect(about_page).not_to be_nil
@@ -79,6 +82,10 @@ RSpec.describe "Full pipeline integration" do
       titles = parsed.map { |p| p["title"] }
       expect(titles).to include("Test Site")
       expect(titles).to include("About")
+
+      index = parsed.find { |p| p["pathname"] == "/" }
+      expect(index["metadata"]["extractor"]).to eq("Nous::Extractor::Default")
+      expect(index["metadata"]["requested_url"]).to eq("https://example.com/")
     end
 
     it "respects the limit option" do

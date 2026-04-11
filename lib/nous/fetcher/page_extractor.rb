@@ -21,7 +21,11 @@ module Nous
           url: raw_page.url,
           pathname: raw_page.pathname,
           content: result.payload.content,
-          metadata: {extractor: extractor.class.name}
+          metadata: {
+            extractor: extractor.class.name,
+            requested_url: raw_page.requested_url,
+            content_type: raw_page.content_type
+          }
         )
 
         success(payload: page)

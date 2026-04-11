@@ -1,7 +1,15 @@
 # frozen_string_literal: true
 
 RSpec.describe Nous::Extractor::Jina do
-  let(:raw_page) { Nous::RawPage.new(url: "https://example.com/test", pathname: "/test", html: "<html></html>") }
+  let(:raw_page) do
+    Nous::RawPage.new(
+      url: "https://example.com/test",
+      pathname: "/test",
+      html: "<html></html>",
+      requested_url: "https://example.com/test",
+      content_type: "text/html"
+    )
+  end
   let(:jina_response) do
     {
       code: 200,
