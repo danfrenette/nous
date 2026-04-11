@@ -1,5 +1,51 @@
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-11
+
+### Added
+
+- **New `details: true` option for `Nous.fetch`** - Returns a `FetchResult` object containing both successful pages and failed fetch/extraction attempts. This enables explicit failure handling without exceptions.
+  ```ruby
+  result = Nous.fetch("https://example.com", details: true)
+  result.pages    # Array<Page> - successfully extracted
+  result.failures # [{requested_url:, error:}, ...]
+  ```
+
+- **Page metadata** - Every extracted page now includes provenance information:
+  - `extractor`: Which extractor backend was used (e.g., "Nous::Extractor::Default")
+  - `requested_url`: The original URL before any redirects
+  - `content_type`: HTTP Content-Type header from the response
+  - `redirected`: Boolean indicating if redirects occurred
+
+- **FetchRecord internal primitive** - Unified fetch result representation that captures both success and failure cases with full provenance tracking. Replaces the previous `RawPage` which only handled successful fetches.
+
+- **Configuration#single_page? helper** - Convenience predicate method for checking if the current configuration is in single-page (non-recursive) mode.
+
+### Changed
+
+- **Improved title extraction** - Title extraction now uses a fallback chain: readability extracted title → HTML `<title>` tag → first `<h1>` element. This significantly improves title reliability on pages where readability fails to identify the title.
+
+- **Reduced aggressive DOM stripping** - The default extractor now preserves more content before readability processing. Previously removed elements (`header`, `img`, `video`, `svg`, `link`) are now retained, providing better context for readability scoring and preserving useful content like captions and bylines.
+
+- **Unified fetch contract** - Both single-page and recursive crawling now use the same internal `FetchRecord` structure, ensuring consistent provenance tracking and failure handling across all fetch modes.
+
+- **Serializer schema updated** - Both text and JSON output formats now include:
+  - `pathname`: URL path component
+  - `extractor`: Which extractor processed the page
+  - Full metadata object (JSON only)
+
+### Fixed
+
+- **JSON serialization** - The JSON output now correctly includes the `pathname` field that was documented but missing in previous versions.
+
+- **Extraction failure visibility** - Previously, extraction failures were only visible with debug logging enabled. The new `FetchResult` structure makes failures programmatically accessible.
+
+### Internal Changes
+
+- **Duck-typed extractor interface** - Extractors now receive the full `FetchRecord` object and can access the fields they need (`Default` uses `record.html`, `Jina` uses `record.final_url`).
+
+- **Removed `RawPage` primitive** - Superseded by the richer `FetchRecord` which handles both success and failure uniformly.
+
 ## [0.3.0] - 2026-02-23
 
 - Remove `Nous::Error` base hierarchy; colocated errors inherit directly from `StandardError` with descriptive names
@@ -29,3 +75,9 @@
 ## [0.1.0] - 2026-02-21
 
 - Initial release
+
+[Unreleased]: https://github.com/danfrenette/nous/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/danfrenette/nous/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/danfrenette/nous/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/danfrenette/nous/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/danfrenette/nous/releases/tag/v0.1.0
