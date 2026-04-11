@@ -18,10 +18,10 @@ module Nous
       @configuration = nil
     end
 
-    def fetch(seed_url, extractor: Extractor::Default.new, http_client: nil, **options)
+    def fetch(seed_url, extractor: Extractor::Default.new, http_client: nil, details: false, **options)
       configure(**options)
 
-      result = Fetcher.call(seed_url:, extractor:, http_client:)
+      result = Fetcher.call(seed_url:, extractor:, http_client:, details:)
       raise result.error if result.failure?
 
       result.payload

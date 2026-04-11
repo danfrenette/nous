@@ -145,4 +145,57 @@ RSpec.describe "Full pipeline integration" do
       expect(output).to include("<title>Test Site</title>")
     end
   end
+
+  context "with details option" do
+    it "returns FetchResult with pages and failures for single-page" do
+      stub_request(:get, "https://example.com/blog")
+        .to_return(status: 200, body: index_html, headers: {"content-type" => "text/html"})
+
+      result = Nous.fetch("https://example.com/blog", timeout: 5, details: true)
+
+      expect(result).to be_a(Nous::FetchResult)
+      expect(result.pages).to be_an(Array)
+      expect(result.pages.length).to eq(1)
+      expect(result.failures).to eq([])
+      expect(result.all_succeeded?).to be true
+      expect(result.any_succeeded?).to be true
+      expect(result.total_requested).to eq(1)
+    end
+
+    it "returns FetchResult with failure for non-HTML content without raising" do
+      stub_request(:get, "https://example.com/api")
+        .to_return(status: 200, body: '{"key": "value"}', headers: {"content-type" => "application/json"})
+
+      result = Nous.fetch("https://example.com/api", timeout: 5, details: true)
+
+      expect(result).to be_a(Nous::FetchResult)
+      expect(result.pages).to be_empty
+      expect(result.failures).not_to be_empty
+      expect(result.failures.first[:requested_url]).to eq("https://example.com/api")
+      expect(result.failures.first[:error]).to include("non-html")
+      expect(result.all_succeeded?).to be false
+      expect(result.any_succeeded?).to be false
+    end
+
+    it "returns FetchResult with mixed results for recursive crawl" do
+      stub_request(:get, "https://example.com/")
+        .to_return(status: 200, body: index_html, headers: {"content-type" => "text/html"})
+
+      stub_request(:get, "https://example.com/about")
+        .to_return(status: 404, body: "not found")
+
+      stub_request(:get, "https://example.com/nav-link")
+        .to_return(status: 200, body: about_html, headers: {"content-type" => "text/html"})
+
+      stub_request(:get, "https://example.com/guide")
+        .to_return(status: 404, body: "not found")
+
+      result = Nous.fetch("https://example.com", recursive: true, limit: 3, details: true)
+
+      expect(result).to be_a(Nous::FetchResult)
+      expect(result.pages).not_to be_empty
+      expect(result.any_succeeded?).to be true
+      expect(result.total_requested).to be > 0
+    end
+  end
 end
