@@ -43,6 +43,8 @@ module Nous
         <page>
           <title>#{page.title}</title>
           <url>#{page.url}</url>
+          <pathname>#{page.pathname}</pathname>
+          <extractor>#{page.metadata[:extractor]}</extractor>
           <content>
         #{page.content}
           </content>
@@ -51,7 +53,13 @@ module Nous
     end
 
     def json_page(page)
-      {title: page.title, url: page.url, content: page.content}
+      {
+        title: page.title,
+        url: page.url,
+        pathname: page.pathname,
+        content: page.content,
+        metadata: page.metadata
+      }
     end
   end
 end

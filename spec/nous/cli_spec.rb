@@ -4,7 +4,7 @@ require "tmpdir"
 
 RSpec.describe Nous::Cli do
   let(:pages) do
-    [Nous::Page.new(title: "Test", url: "https://example.com/", pathname: "/", content: "# Hello")]
+    [Nous::Page.new(title: "Test", url: "https://example.com/", pathname: "/", content: "# Hello", metadata: {extractor: "Nous::Extractor::Default"})]
   end
 
   let(:serialized_output) { "<page><title>Test</title><content># Hello</content></page>" }

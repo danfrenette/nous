@@ -40,5 +40,26 @@ RSpec.describe Nous::Extractor::Default::Client do
         expect(result).to be_failure
       end
     end
+
+    context "with fallback title extraction" do
+      it "falls back to <title> tag when readability produces no title" do
+        html = <<~HTML
+          <html><head><title>Original Title</title></head>
+          <body><h1>Page Heading</h1><p>Content here.</p></body></html>
+        HTML
+
+        result = described_class.call(html:)
+
+        expect(result).to be_success
+        expect(result.payload[:title]).to eq("Original Title")
+      end
+
+      it "extracts a title from the page" do
+        result = described_class.call(html:)
+
+        expect(result).to be_success
+        expect(result.payload[:title]).not_to be_empty
+      end
+    end
   end
 end

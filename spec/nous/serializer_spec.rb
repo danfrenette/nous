@@ -3,8 +3,8 @@
 RSpec.describe Nous::Serializer do
   let(:pages) do
     [
-      Nous::Page.new(title: "Page One", url: "https://example.com/one", pathname: "/one", content: "# One"),
-      Nous::Page.new(title: "Page Two", url: "https://example.com/two", pathname: "/two", content: "# Two")
+      Nous::Page.new(title: "Page One", url: "https://example.com/one", pathname: "/one", content: "# One", metadata: {extractor: "Nous::Extractor::Default"}),
+      Nous::Page.new(title: "Page Two", url: "https://example.com/two", pathname: "/two", content: "# Two", metadata: {extractor: "Nous::Extractor::Default"})
     ]
   end
 
@@ -16,6 +16,7 @@ RSpec.describe Nous::Serializer do
         expect(result).to be_success
         expect(result.payload).to include("<page>")
         expect(result.payload).to include("<title>Page One</title>")
+        expect(result.payload).to include("<pathname>/one</pathname>")
         expect(result.payload).to include("# One")
       end
     end
@@ -29,6 +30,7 @@ RSpec.describe Nous::Serializer do
         parsed = JSON.parse(result.payload)
         expect(parsed.length).to eq(2)
         expect(parsed.first["title"]).to eq("Page One")
+        expect(parsed.first["pathname"]).to eq("/one")
       end
     end
 
