@@ -121,16 +121,15 @@ module Nous
     end
 
     def render_content
-      if format == :text
-        @content = Nokogiri::HTML.fragment(@readable[:content]).tap do |fragment|
-          fragment.css("p, div, h1, h2, h3, h4, h5, h6, li, tr, br").each do |node|
-            node.add_next_sibling(Nokogiri::XML::Text.new(" ", fragment.document))
-          end
-        end.text.gsub(/\s+/, " ").strip
-        return
-      end
+      @content = (format == :text) ? render_plain_text : @readable[:markdown]
+    end
 
-      @content = @readable[:markdown]
+    def render_plain_text
+      Nokogiri::HTML.fragment(@readable[:content]).tap do |fragment|
+        fragment.css("p, div, h1, h2, h3, h4, h5, h6, li, tr, br").each do |node|
+          node.add_next_sibling(Nokogiri::XML::Text.new(" ", fragment.document))
+        end
+      end.text.gsub(/\s+/, " ").strip
     end
 
     def verify_extracted_content

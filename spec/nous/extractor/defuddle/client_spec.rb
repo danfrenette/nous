@@ -1,82 +1,54 @@
 # frozen_string_literal: true
 
-require "rbconfig"
-
 RSpec.describe Nous::Extractor::Defuddle::Client do
+  let(:runner) { Nous::Extractor::Defuddle::RunProcess }
+
   def extract
-    described_class.call(html: "<html><body><p>Private content.</p></body></html>", url: "https://example.com")
+    described_class.call(html: "<p>Private content.</p>", url: "https://example.com")
   end
 
-  def process_fixture(code)
-    allow(Open3).to receive(:popen3).and_wrap_original do |original, *args, **options, &block|
-      original.call(RbConfig.ruby, "-e", code, **options, &block)
-    end
+  def respond_with(output)
+    allow(runner).to receive(:call).and_return(Nous::Command::Result.new(success: true, payload: output))
   end
 
-  it "reports a missing runtime without downloading or switching extractors" do
-    allow(Open3).to receive(:popen3).and_raise(Errno::ENOENT)
-    result = extract
-    expect(result).to be_failure
-    expect(result.error.message).to include("Node.js")
+  it "passes explicit extraction inputs to the process without changing the HTML" do
+    html = "<article>Original content.</article>"
+    respond_with('{"title":"Title","content":"<p>Body</p>","markdown":"Body"}')
+    result = described_class.call(html: html, url: "https://example.com/final", selector: "article")
+    expect(result).to be_success
+    expect(result.payload).to eq(title: "Title", content: "<p>Body</p>", markdown: "Body")
+    expect(runner).to have_received(:call).with(request: JSON.generate(html: html, url: "https://example.com/final", selector: "article"))
+    expect(html).to eq("<article>Original content.</article>")
   end
 
-  it "rejects process failures without exposing stderr" do
-    process_fixture('STDIN.read; STDERR.write("private source"); exit 1')
-    result = extract
-    expect(result).to be_failure
-    expect(result.error.message).to eq("Defuddle extraction failed")
+  it "does not launch work during construction" do
+    expect(runner).not_to receive(:call)
+    described_class.new(html: "<p>Body</p>", url: "https://example.com")
   end
 
   it "rejects malformed JSON and invalid response fields" do
-    ["not-json", '{"title":4,"content":"body","markdown":"body"}', '{"title":"title","content":"body","markdown":"bad\\u0000text"}'].each do |output|
-      process_fixture("STDIN.read; STDOUT.write(#{output.dump})")
+    ["not-json", '{"title":4,"content":"body","markdown":"body"}',
+      JSON.generate(title: "Title", content: "Body", markdown: "bad\0text")].each do |output|
+      respond_with(output)
       expect(extract.error).to be_a(described_class::ProcessError)
     end
   end
 
-  it "does not expose invalid input bytes in error messages" do
+  it "rejects invalid input before launching a process without exposing its bytes" do
+    expect(runner).not_to receive(:call)
     result = described_class.call(html: "private\xFF".b, url: "https://example.com")
     expect(result).to be_failure
     expect(result.error.message).not_to include("private")
   end
 
   it "does not turn an empty extraction into success" do
-    process_fixture('STDIN.read; puts %q({"title":"Title","content":"","markdown":" "})')
+    respond_with('{"title":"Title","content":"","markdown":" "}')
     expect(extract.error).to be_a(described_class::NoContent)
   end
 
-  it "bounds process output" do
-    stub_const("#{described_class}::OUTPUT_LIMIT", 1024)
-    process_fixture('STDIN.read; loop { STDOUT.write("x" * 2048); STDOUT.flush }')
-    expect(extract.error.message).to include("byte limit")
-  end
-
-  it "reaps the process after success, nonzero exit and invalid JSON" do
-    ['STDIN.read; puts %q({"title":"Title","content":"<p>Body</p>","markdown":"Body"})',
-      "STDIN.read; exit 1", 'STDIN.read; puts "invalid"'].each_with_index do |code, index|
-      pid = nil
-      allow(Open3).to receive(:popen3).and_wrap_original do |original, *args, **options, &block|
-        original.call(RbConfig.ruby, "-e", code, **options) do |*pipes|
-          pid = pipes.last.pid
-          block.call(*pipes)
-        end
-      end
-      result = extract
-      expect(result.success?).to eq(index.zero?)
-      expect { Process.waitpid(pid, Process::WNOHANG) }.to raise_error(Errno::ECHILD)
-    end
-  end
-
-  it "terminates and reaps a timed-out process" do
-    stub_const("#{described_class}::TIMEOUT", 0.2)
-    pid = nil
-    allow(Open3).to receive(:popen3).and_wrap_original do |original, *args, **options, &block|
-      original.call(RbConfig.ruby, "-e", "STDIN.read; sleep 60", **options) do |*pipes|
-        pid = pipes.last.pid
-        block.call(*pipes)
-      end
-    end
-    expect(extract.error.message).to include("timed out")
-    expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
+  it "preserves a process failure without parsing its output" do
+    error = described_class::ProcessError.new("Defuddle extraction timed out")
+    allow(runner).to receive(:call).and_return(Nous::Command::Result.new(success: false, error: error))
+    expect(extract.error).to equal(error)
   end
 end

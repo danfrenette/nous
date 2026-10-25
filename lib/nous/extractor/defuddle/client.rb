@@ -1,19 +1,13 @@
 # frozen_string_literal: true
 
 require "json"
-require "open3"
-require "timeout"
 
 module Nous
   module Extractor
     class Defuddle
       class Client < Command
         class NoContent < ExtractionError; end
-        class ProcessError < ExtractionError; end
-
-        BRIDGE = File.expand_path("../../../../vendor/defuddle.mjs", __dir__)
-        OUTPUT_LIMIT = 64 * 1024 * 1024
-        TIMEOUT = 15
+        ProcessError = RunProcess::Error
 
         def initialize(html:, url:, selector: nil)
           @html = html
@@ -28,11 +22,7 @@ module Nous
           report_content
         rescue NoContent, ProcessError => error
           failure(error)
-        rescue Errno::ENOENT
-          failure(ProcessError.new("Defuddle requires Node.js 22 or newer on PATH"))
-        rescue Timeout::Error
-          failure(ProcessError.new("Defuddle extraction timed out"))
-        rescue JSON::JSONError, EncodingError, IOError, SystemCallError
+        rescue JSON::JSONError, EncodingError
           failure(ProcessError.new("Invalid Defuddle process response"))
         end
 
@@ -46,53 +36,10 @@ module Nous
 
         def run_defuddle
           request = JSON.generate(html: @html, url: @url, selector: @selector)
-          Open3.popen3("node", BRIDGE, pgroup: true) do |stdin, stdout, stderr, child|
-            workers = []
-            begin
-              Timeout.timeout(TIMEOUT) do
-                workers << Thread.new {
-                  stdin.write(request)
-                  stdin.close
-                }
-                workers << Thread.new { read_bounded(stdout, OUTPUT_LIMIT) }
-                workers << Thread.new { read_bounded(stderr, 64 * 1024) }
-                workers.each { |worker| worker.report_on_exception = false }
-                output = workers[1].value
-                workers[0].value
-                workers[2].value
-                raise ProcessError, "Defuddle extraction failed" unless child.value.success?
+          result = RunProcess.call(request: request)
+          raise result.error if result.failure?
 
-                @response = JSON.parse(output, symbolize_names: true)
-              end
-            ensure
-              terminate(child.pid)
-              [stdin, stdout, stderr].each { |io| io.close unless io.closed? }
-              # Preserve the original failure while joining every owned worker.
-              workers.each { |worker|
-                begin
-                  worker.join
-                rescue
-                  nil
-                end
-              }
-            end
-          end
-        end
-
-        def terminate(pid)
-          Process.kill("KILL", -pid)
-        rescue Errno::ESRCH
-          nil
-        end
-
-        def read_bounded(io, limit)
-          output = +""
-          loop do
-            output << io.readpartial(16 * 1024)
-            raise ProcessError, "Defuddle process output exceeds byte limit" if output.bytesize > limit
-          end
-        rescue EOFError
-          output
+          @response = JSON.parse(result.payload, symbolize_names: true)
         end
 
         def validate_response

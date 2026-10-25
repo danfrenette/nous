@@ -18,9 +18,10 @@ printf '%s\n' "$?" > "$receipt_dir/defuddle.exit"
 ```
 
 Require exit zero. The extractor specs exercise the actual bundled parser with
-synthetic HTML. Client specs substitute controlled Ruby subprocesses for Node to
-exercise missing-runtime errors, malformed JSON/fields, empty output, nonzero
-exit, output limits and timeout cleanup. CLI specs check backend selection.
+synthetic HTML. Client specs cover JSON/field validation, empty content and propagation of a
+failed process result. `RunProcess` specs independently exercise raw process
+output, nonzero exit, output limits, reaping and timeout cleanup with controlled
+Ruby subprocesses. Missing-runtime and safe-diagnostic errors are covered through `RunProcess`. CLI specs check backend selection.
 Run the retained-HTML and failure-propagation recipes, full suite and Standard too.
 
 For installed-runtime and packaging compatibility, run the separate opt-in check:
