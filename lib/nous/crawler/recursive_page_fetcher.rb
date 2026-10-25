@@ -10,6 +10,8 @@ module Nous
         @seed_uri = Url.new(seed_url)
         @http_client = http_client
         @records = []
+        @successful_count = 0
+        @total_requested = 0
         @queue = [url_filter.canonicalize(seed_uri)]
         @seen = Set.new(queue)
       end
@@ -33,7 +35,7 @@ module Nous
       end
 
       def report_acquired_records
-        success(payload: records)
+        success(payload: records, metadata: {total_requested: @total_requested})
       end
 
       def config
@@ -46,10 +48,12 @@ module Nous
 
       def fetch_and_enqueue(batch, client)
         fetch_batch(batch, client).each do |record|
-          break unless within_limit?
+          @total_requested += 1
+          next if record.ok && !within_limit?
 
           records << record
           next unless record.ok
+          @successful_count += 1
           seen << record.final_url
           enqueue_links(record)
         end
@@ -77,7 +81,7 @@ module Nous
       end
 
       def within_limit?
-        records.count(&:ok) < config.limit
+        @successful_count < config.limit
       end
 
       def open_connection

@@ -66,7 +66,7 @@ module Nous
 
     def decode_retained_html
       bytes = html.b
-      declared = content_type[/charset\s*=\s*["']?([^\s;"']+)/i, 1]
+      declared = charset_parameter(content_type)
       @encoding = select_encoding(declared || bom_encoding(bytes) || meta_encoding(bytes) || "UTF-8")
       encoded = bytes.dup.force_encoding(@encoding)
       raise InvalidContent, "HTML contains invalid encoded bytes" unless encoded.valid_encoding?
@@ -86,10 +86,21 @@ module Nous
       "UTF-16LE" if bytes.start_with?("\xFF\xFE".b)
     end
 
+    def charset_parameter(value)
+      value.scan(/(?:\A|;)\s*([^;=\s]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^;\s]*))/).each do |name, quoted, single_quoted, bare|
+        return quoted || single_quoted || bare if name.casecmp?("charset")
+      end
+      nil
+    end
+
     def meta_encoding(bytes)
-      bytes.byteslice(0, 1024).scan(/<meta\b[^>]*>/in).each do |tag|
-        encoding = tag[/charset\s*=\s*["']?([^\s;"'>]+)/in, 1]
-        return encoding if encoding
+      document = Nokogiri::HTML(bytes.byteslice(0, 1024), nil, "ISO-8859-1")
+      document.css("meta").each do |meta|
+        return meta["charset"] if meta["charset"]
+        if meta["http-equiv"].to_s.casecmp?("content-type")
+          declared = charset_parameter(meta["content"].to_s)
+          return declared if declared
+        end
       end
       nil
     end

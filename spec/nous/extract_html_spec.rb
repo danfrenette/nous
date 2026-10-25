@@ -124,4 +124,22 @@ RSpec.describe "Retained HTML extraction" do
     expect(results.map { |result| result.metadata[:format] }).to eq([:text, :markdown])
     expect(results.map { |result| result.metadata[:source_url] }).to eq(["Alpha", "Bravo"])
   end
+
+  it "ignores charset examples inside comments, scripts and attribute values" do
+    examples = ['<!-- <meta charset="imaginary"> -->', %q(<script>const sample = '<meta charset="imaginary">';</script>), %q(<div data-example='<meta charset="imaginary">'></div>)]
+    examples.each do |example|
+      html = example + "<html><body><p>Readable content.</p></body></html>"
+      result = Nous::ExtractHtml.call(html: html, source_url: "saved")
+      expect(result).to be_success
+      expect(result.payload.content).to include("Readable content.")
+      expect(result.metadata[:encoding]).to eq("UTF-8")
+    end
+  end
+
+  it "matches the charset parameter name and ignores quoted parameter examples" do
+    result = Nous::ExtractHtml.call(html: "<html><body><p>Readable content.</p></body></html>",
+      source_url: "saved", content_type: 'text/html; notcharset=imaginary; example=";charset=imaginary"')
+    expect(result).to be_success
+    expect(result.metadata[:encoding]).to eq("UTF-8")
+  end
 end

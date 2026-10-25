@@ -108,6 +108,10 @@ result.any_succeeded?   # Boolean - true if at least one page extracted
 Acquisition failures retain their existing messages; extraction failures retain their
 exception objects. Detailed results include failed recursive requests as well as
 failed extraction. Pages-only calls still return successful pages in source order.
+A concurrent batch may already have attempted more successful pages than the limit
+allows returning. `total_requested` counts every attempted request in that batch;
+failures remain visible, while excess successful pages are omitted from `pages`.
+The limit still governs retained successful pages, not failed attempts.
 
 This is useful when you need to handle failures explicitly:
 
