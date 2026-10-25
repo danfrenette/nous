@@ -2,8 +2,6 @@
 
 module Nous
   module Extractor
-    class ExtractionError < StandardError; end
-
     class Default < Command
       def initialize(selector: nil)
         @selector = selector

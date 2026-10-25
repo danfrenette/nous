@@ -4,7 +4,7 @@ module Nous
   class Fetcher < Command
     class FetchError < StandardError; end
 
-    def initialize(seed_url:, extractor: Extractor::Default.new, http_client: nil, details: false)
+    def initialize(seed_url:, extractor: Extractor::Defuddle.new, http_client: nil, details: false)
       @seed_url = seed_url
       @extractor = extractor
       @http_client = http_client

@@ -18,7 +18,7 @@ module Nous
       @configuration = nil
     end
 
-    def fetch(seed_url, extractor: Extractor::Default.new, http_client: nil, details: false, **options)
+    def fetch(seed_url, extractor: Extractor::Defuddle.new, http_client: nil, details: false, **options)
       configure(**options)
 
       result = Fetcher.call(seed_url:, extractor:, http_client:, details:)

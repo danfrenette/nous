@@ -7,6 +7,7 @@ certify all crawling, rendering, serialization or consumer behavior.
 
 | Recipe | State | Coverage |
 | --- | --- | --- |
+| [Defuddle](defuddle.md) | Implemented; run required | Bundled parser, selectors, process failures, concurrency and packaging |
 | [Retained HTML](retained-html.md) | Implemented; run required | Offline content/provenance, formats, decoding, byte budgets, errors and legacy compatibility |
 | [Failure propagation](failure-propagation.md) | Implemented; run required | Public detailed result must retain extraction failure |
 
@@ -71,6 +72,6 @@ Never use private captures for the synthetic fixture checks.
 
 Real-world readability quality, process CPU/memory/wall-time supervision,
 Substrate integration, locked Autodidact compatibility and hosted acceptance remain
-outside this map. Jina reacquires URLs and is outside retained-original verification.
+outside this map. Neither local backend renders JavaScript.
 The caller owns immutable storage and any application lifecycle. Passing library
 recipes alone does not certify downstream adoption.

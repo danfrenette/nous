@@ -74,7 +74,7 @@ RSpec.describe "Full pipeline integration" do
       expect(index_page).not_to be_nil
       expect(index_page.title).to eq("Test Site")
       expect(index_page.content).to include("main content")
-      expect(index_page.metadata[:extractor]).to eq("Nous::Extractor::Default")
+      expect(index_page.metadata[:extractor]).to eq("Nous::Extractor::Defuddle")
       expect(index_page.metadata[:requested_url]).to eq("https://example.com/")
       expect(index_page.metadata[:content_type]).to eq("text/html; charset=utf-8")
 
@@ -103,7 +103,7 @@ RSpec.describe "Full pipeline integration" do
       expect(titles).to include("About")
 
       index = parsed.find { |p| p["pathname"] == "/" }
-      expect(index["metadata"]["extractor"]).to eq("Nous::Extractor::Default")
+      expect(index["metadata"]["extractor"]).to eq("Nous::Extractor::Defuddle")
       expect(index["metadata"]["requested_url"]).to eq("https://example.com/")
     end
 
@@ -114,28 +114,11 @@ RSpec.describe "Full pipeline integration" do
       expect(pages.length).to eq(1)
     end
 
-    it "works with the Jina extractor backend" do
-      jina_response = {
-        "code" => 200,
-        "data" => {"title" => "Jina Title", "content" => "# Jina Content\n\nSome text."}
-      }.to_json
-
-      stub_request(:get, "https://r.jina.ai/https://example.com/")
-        .to_return(status: 200, body: jina_response, headers: {"content-type" => "application/json"})
-
-      stub_request(:get, "https://r.jina.ai/https://example.com/about")
-        .to_return(status: 200, body: jina_response, headers: {"content-type" => "application/json"})
-
-      stub_request(:get, "https://r.jina.ai/https://example.com/nav-link")
-        .to_return(status: 200, body: jina_response, headers: {"content-type" => "application/json"})
-
-      extractor = Nous::Extractor::Jina.new
-      pages = Nous.fetch("https://example.com", http_client: fake_client, limit: 10, concurrency: 2, timeout: 5,
-        extractor: extractor, recursive: true)
-
-      expect(pages).to all(be_a(Nous::Page))
-      expect(pages.first.title).to eq("Jina Title")
-      expect(pages.first.content).to eq("# Jina Content\n\nSome text.")
+    it "supports the explicit Readability backup" do
+      pages = Nous.fetch("https://example.com", http_client: fake_client,
+        extractor: Nous::Extractor::Default.new, recursive: true)
+      expect(pages.first.content).to include("main content")
+      expect(pages.first.metadata[:extractor]).to eq("Nous::Extractor::Default")
     end
   end
 
