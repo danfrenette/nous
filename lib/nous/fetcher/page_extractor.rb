@@ -9,8 +9,22 @@ module Nous
       end
 
       def call
-        result = extractor.extract(record)
+        extract_content
+        report_page
+      rescue => error
+        failure(error)
+      end
 
+      private
+
+      attr_reader :extractor, :record
+
+      def extract_content
+        @extraction = extractor.extract(record)
+      end
+
+      def report_page
+        result = @extraction
         unless result.success?
           warn("[nous] extract skip #{record.final_url}: #{result.error.message}") if Nous.configuration.debug?
           return failure(result.error)
@@ -28,13 +42,8 @@ module Nous
             redirected: record.redirected
           }
         )
-
         success(payload: page)
       end
-
-      private
-
-      attr_reader :extractor, :record
     end
   end
 end

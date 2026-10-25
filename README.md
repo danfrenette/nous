@@ -99,11 +99,15 @@ Use the `details: true` option to receive full fetch results including failures:
 result = Nous.fetch("https://example.com", details: true)
 
 result.pages       # Array<Nous::Page> - successfully extracted pages
-result.failures    # Array<{requested_url:, error:}> - failed fetches
+result.failures    # Array<{requested_url:, error:}> - failed acquisition or extraction
 result.total_requested  # Integer - total URLs attempted
 result.all_succeeded?   # Boolean - true if no failures
 result.any_succeeded?   # Boolean - true if at least one page extracted
 ```
+
+Acquisition failures retain their existing messages; extraction failures retain their
+exception objects. Detailed results include failed recursive requests as well as
+failed extraction. Pages-only calls still return successful pages in source order.
 
 This is useful when you need to handle failures explicitly:
 
@@ -121,6 +125,62 @@ result.pages.each do |page|
   puts "Successfully extracted: #{page.title}"
 end
 ```
+
+### Retained HTML extraction
+
+Use saved bytes directly, without crawling or reacquiring a URL:
+
+```ruby
+result = Nous::ExtractHtml.call(
+  html: File.binread("saved.html"),
+  source_url: "https://example.com/article",
+  content_type: "text/html; charset=utf-8",
+  format: :text
+)
+raise result.error if result.failure?
+puts result.payload.title
+puts result.payload.content
+puts result.metadata
+```
+
+`html:` and `source_url:` are required. The URL is provenance only; this command
+never requests it. `content_type:` defaults to `"text/html"`; HTML and XHTML are
+supported. `format:` defaults to `:markdown`; `:text` returns readable text with
+collapsed whitespace and separated blocks. Legacy `Extractor::Default#extract`
+continues producing Markdown with its existing selector behavior.
+
+Character decoding uses a declared content-type charset first, then a UTF BOM,
+then an HTML meta charset in the first 1024 bytes, then UTF-8. Input is treated as
+bytes regardless of its Ruby encoding label and is never modified. Invalid byte
+sequences and decoded NULs fail; unsupported charset names fail explicitly. A
+conflicting meta declaration does not override a declared header charset.
+
+The result payload remains `Nous::ExtractedContent` (`title`, `content`). Metadata
+contains `source_url`, original `content_type`, selected `encoding`, `format`, and
+limitations `static_html_only` and `authentication_not_detected`. Static readable
+content does not prove that an authenticated or JavaScript-rendered page is complete.
+
+`max_input_bytes:` defaults to 25 MiB; `max_output_bytes:` defaults to 32 MiB.
+Both require positive integers. Input is checked before copying/parsing. Output
+counts the combined UTF-8 bytes of title and content, excluding caller-supplied
+provenance metadata. These are input/result guards, not peak-memory, CPU or wall-time
+limits; callers needing those protections must retain process supervision.
+
+Expected errors are nested under `Nous::ExtractHtml`:
+
+| Error | Meaning |
+| --- | --- |
+| `InvalidContent` | Invalid encoded bytes, NULs, or invalid decoded output |
+| `UnsupportedContent` | Unsupported media type, output format or charset |
+| `NoContent` | No readable content or empty converted output |
+| `InputLimitExceeded` / `OutputLimitExceeded` | Caller byte budget exceeded |
+| `InvalidLimits` (`ArgumentError`) | Nonpositive or noninteger byte limit |
+| `UnexpectedFailure` | Safe outward message; original exception in `cause` |
+
+Treat diagnostic causes as private debugging data; their messages can contain
+source content. Rails acquisition, storage, lifecycle and process supervision are
+outside this command. See the [verification map](docs/verification/README.md) for
+executed surfaces and remaining consumer acceptance.
 
 ### Page Structure
 
@@ -200,6 +260,11 @@ Extracted markdown content...
 ```
 
 ## Development
+
+Read [CODING_STANDARDS.md](CODING_STANDARDS.md) before implementation and include it
+in Anaphor Standards reviews. Use the [verification map](docs/verification/README.md)
+and project-local [verify-nous skill](.agents/skills/verify-nous/SKILL.md) for the
+retained-HTML and failure-propagation readiness checks.
 
 ```bash
 bin/setup               # Install dependencies

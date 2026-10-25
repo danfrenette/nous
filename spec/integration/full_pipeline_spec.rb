@@ -43,6 +43,25 @@ RSpec.describe "Full pipeline integration" do
       end.new
     end
 
+    it "reports acquisition and extraction failures while retaining readable page order" do
+      responses["https://example.com/about"] = mock_response.new(status: 200, body: "<html><body></body></html>")
+
+      detailed = Nous.fetch("https://example.com", http_client: fake_client, limit: 10,
+        concurrency: 2, recursive: true, details: true)
+      pages = Nous.fetch("https://example.com", http_client: fake_client, limit: 10,
+        concurrency: 2, recursive: true)
+
+      expect(detailed.pages.map(&:url)).to eq(pages.map(&:url))
+      expect(detailed.pages.map(&:pathname)).to eq(["/", "/nav-link"])
+      expect(detailed.failures.map { |failure| failure[:requested_url] }).to contain_exactly(
+        "https://example.com/guide", "https://example.com/about"
+      )
+      expect(detailed.all_succeeded?).to be(false)
+      extraction_failure = detailed.failures.find { |failure| failure[:requested_url].end_with?("/about") }
+      expect(extraction_failure[:error]).to be_a(Nous::Extractor::ExtractionError)
+      expect(detailed.total_requested).to eq(4)
+    end
+
     it "crawls, extracts, and serializes as text" do
       pages = Nous.fetch("https://example.com", http_client: fake_client, limit: 10, concurrency: 2, timeout: 5,
         recursive: true)
