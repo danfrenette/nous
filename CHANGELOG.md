@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+### Added
+
+- `Nous::ExtractHtml.call` extracts retained HTML without network acquisition, with
+  Markdown or plain text, source metadata, explicit decoding errors and caller byte limits.
+
+### Fixed
+
+- Detailed fetch results retain extraction failures and all attempted failures from
+  concurrent crawl batches, with accurate request counts and unchanged page limits.
+
 ## [0.4.0] - 2026-04-11
 
 ### Added
