@@ -8,3 +8,5 @@ RSpec::Core::RakeTask.new(:spec)
 require "standard/rake"
 
 task default: %i[spec standard]
+
+Dir.glob("tasks/*.rake").sort.each { |path| load path }

@@ -15,18 +15,26 @@ module Nous
       end
 
       def call
-        suppress_async_warnings unless config.debug?
-
-        open_connection do |client|
-          crawl(client)
-        end
-
-        success(payload: records)
+        prepare_crawl_logging
+        acquire_linked_records
+        report_acquired_records
       end
 
       private
 
       attr_reader :seed_uri, :http_client, :records, :queue, :seen
+
+      def prepare_crawl_logging
+        suppress_async_warnings unless config.debug?
+      end
+
+      def acquire_linked_records
+        open_connection { |client| crawl(client) }
+      end
+
+      def report_acquired_records
+        success(payload: records)
+      end
 
       def config
         Nous.configuration
@@ -38,10 +46,10 @@ module Nous
 
       def fetch_and_enqueue(batch, client)
         fetch_batch(batch, client).each do |record|
-          next unless record.ok
           break unless within_limit?
 
           records << record
+          next unless record.ok
           seen << record.final_url
           enqueue_links(record)
         end

@@ -11,21 +11,36 @@ module Nous
       end
 
       def call
-        pages = records.each_slice(Nous.configuration.concurrency).each_with_object([]) do |batch, results|
-          threads = batch.map { |record| Thread.new { PageExtractor.call(extractor:, record:) } }
-
-          threads.each do |thread|
-            result = thread.value
-            results << result.payload if result.success?
-          end
-        end
-
-        success(payload: pages)
+        extract_records
+        report_extraction_outcomes
       end
 
       private
 
-      attr_reader :records, :extractor
+      attr_reader :records, :extractor, :pages, :failures
+
+      def extract_records
+        @pages = []
+        @failures = []
+        records.each_slice(Nous.configuration.concurrency) do |batch|
+          threads = batch.map { |record| Thread.new { PageExtractor.call(extractor:, record:) } }
+          batch.zip(threads).each do |record, thread|
+            retain_outcome(record, thread.value)
+          end
+        end
+      end
+
+      def retain_outcome(record, result)
+        if result.success?
+          pages << result.payload
+        else
+          failures << {requested_url: record.requested_url, error: result.error}
+        end
+      end
+
+      def report_extraction_outcomes
+        success(payload: pages, metadata: {failures: failures})
+      end
     end
   end
 end
