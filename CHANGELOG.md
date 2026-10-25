@@ -5,6 +5,18 @@
 - `Nous::ExtractHtml.call` extracts retained HTML without network acquisition, with
   Markdown or plain text, source metadata, explicit decoding errors and caller byte limits.
 
+### Changed
+
+- Defuddle is the default for URL and retained-HTML extraction. The gem bundles
+  its JavaScript dependencies and requires Node.js 22+ on macOS/Linux.
+- Readability remains available through `Extractor::Default` and `--readability`.
+  Extraction failures do not silently switch backends.
+
+### Removed
+
+- Jina Reader integration (`Extractor::Jina`, `--jina`, `JINA_API_KEY`). Neither
+  remaining backend renders JavaScript pages.
+
 ### Fixed
 
 - Detailed fetch results retain extraction failures and all attempted failures from

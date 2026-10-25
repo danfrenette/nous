@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "nokogiri"
+
 module Nous
   class ExtractHtml < Command
     class Error < StandardError; end
@@ -106,9 +108,9 @@ module Nous
     end
 
     def extract_readable_content
-      result = Extractor::Default::Client.new(html: @decoded).call
+      result = Extractor::Defuddle::Client.new(html: @decoded, url: source_url).call
       if result.failure?
-        if result.error.is_a?(Extractor::Default::Client::ExtractionError)
+        if result.error.is_a?(Extractor::Defuddle::Client::NoContent)
           raise NoContent.new("HTML has no readable content"), cause: result.error
         end
         raise result.error
@@ -128,10 +130,7 @@ module Nous
         return
       end
 
-      result = Converter.new(html: @readable[:content]).call
-      raise result.error if result.failure?
-
-      @content = result.payload
+      @content = @readable[:markdown]
     end
 
     def verify_extracted_content

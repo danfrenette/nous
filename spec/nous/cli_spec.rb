@@ -83,30 +83,36 @@ RSpec.describe Nous::Cli do
   end
 
   describe "extractor selection" do
-    it "uses Default extractor by default" do
+    it "uses Defuddle extractor by default" do
       expect { run_cli("https://example.com") }.to output.to_stdout
+
+      expect(Nous).to have_received(:fetch) do |_url, **opts|
+        expect(opts[:extractor]).to be_a(Nous::Extractor::Defuddle)
+      end
+    end
+
+    it "uses Readability extractor with --readability flag" do
+      expect { run_cli("https://example.com", "--readability") }.to output.to_stdout
 
       expect(Nous).to have_received(:fetch) do |_url, **opts|
         expect(opts[:extractor]).to be_a(Nous::Extractor::Default)
       end
     end
 
-    it "uses Jina extractor with --jina flag" do
-      expect { run_cli("https://example.com", "--jina") }.to output.to_stdout
-
-      expect(Nous).to have_received(:fetch) do |_url, **opts|
-        expect(opts[:extractor]).to be_a(Nous::Extractor::Jina)
-      end
-    end
-
-    it "passes selector to Default extractor" do
+    it "passes selector to Defuddle extractor" do
       expect { run_cli("https://example.com", "-s", "article.main") }.to output.to_stdout
 
       expect(Nous).to have_received(:fetch) do |_url, **opts|
         extractor = opts[:extractor]
-        expect(extractor).to be_a(Nous::Extractor::Default)
+        expect(extractor).to be_a(Nous::Extractor::Defuddle)
       end
     end
+  end
+
+  it "rejects the retired Jina flag" do
+    expect do
+      expect { run_cli("https://example.com", "--jina") }.to raise_error(SystemExit) { |error| expect(error.status).to eq(1) }
+    end.to output(/invalid option/).to_stderr
   end
 
   describe "output destination" do

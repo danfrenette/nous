@@ -2,9 +2,13 @@
 
 Crawl websites and extract readable Markdown, optimized for LLM consumption. Inspired by [sitefetch](https://github.com/egoist/sitefetch).
 
-Nous fetches same-host pages starting from a seed URL, extracts readable content, and outputs clean Markdown as XML-tagged text or JSON. It supports concurrent crawling, glob-based URL filtering, and two extraction backends: a local parser (ruby-readability) and the Jina Reader API for JS-rendered sites.
+Nous fetches same-host pages starting from a seed URL, extracts readable content, and outputs clean Markdown as XML-tagged text or JSON. It supports concurrent crawling, glob-based URL filtering, and local extraction with Defuddle by default and an explicit ruby-readability backup. Both parse acquired HTML without rendering JavaScript.
 
 ## Installation
+
+Default extraction requires Node.js 22+ on PATH (macOS/Linux). The gem includes
+the bundled Defuddle adapter; npm is only needed to rebuild it during development.
+See [Defuddle setup](docs/setup/defuddle.md).
 
 Add to your Gemfile:
 
@@ -39,8 +43,8 @@ nous https://example.com -m "/blog/*"
 # Scope extraction to a CSS selector
 nous https://example.com -s "article.post"
 
-# Use Jina Reader API for JS-rendered sites (Next.js, SPAs)
-nous https://example.com --jina
+# Use the Ruby-only Readability backup
+nous https://example.com --readability
 
 # Debug logging
 nous https://example.com -d
@@ -57,7 +61,7 @@ nous https://example.com -d
 | `-s`, `--selector SELECTOR` | CSS selector to scope extraction | none |
 | `-l`, `--limit N` | Maximum pages to fetch | `100` |
 | `--timeout N` | Per-request timeout in seconds | `15` |
-| `--jina` | Use Jina Reader API for extraction | off |
+| `--readability` | Use the Ruby-only Readability backup | off |
 | `-v`, `--version` | Print version and exit | off |
 | `-h`, `--help` | Print usage and exit | off |
 | `-d`, `--debug` | Debug logging to stderr | off |
@@ -84,9 +88,9 @@ text = Nous.serialize(pages, format: :text)
 # Serialize to JSON
 json = Nous.serialize(pages, format: :json)
 
-# Use the Jina extractor for JS-heavy sites
-pages = Nous.fetch("https://spa-site.com",
-  extractor: Nous::Extractor::Jina.new,
+# Select the Readability backup explicitly
+pages = Nous.fetch("https://example.com",
+  extractor: Nous::Extractor::Default.new,
   limit: 5
 )
 ```
@@ -150,7 +154,7 @@ puts result.metadata
 `html:` and `source_url:` are required. The URL is provenance only; this command
 never requests it. `content_type:` defaults to `"text/html"`; HTML and XHTML are
 supported. `format:` defaults to `:markdown`; `:text` returns readable text with
-collapsed whitespace and separated blocks. Legacy `Extractor::Default#extract`
+collapsed whitespace and separated blocks. Defuddle is used for both formats. Legacy `Extractor::Default#extract`
 continues producing Markdown with its existing selector behavior.
 
 Character decoding uses a declared content-type charset first, then a UTF BOM,
@@ -192,7 +196,7 @@ Each extracted page contains:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `title` | String | Page title (fallback chain: readability → `<title>` tag → `<h1>`) |
+| `title` | String | Page title selected by the extraction backend |
 | `url` | String | Final URL after redirects |
 | `pathname` | String | URL path component |
 | `content` | String | Extracted content as Markdown |
@@ -202,7 +206,7 @@ Each extracted page contains:
 
 ```ruby
 page.metadata  # => {
-  #   extractor: "Nous::Extractor::Default",  # Which extractor was used
+  #   extractor: "Nous::Extractor::Defuddle",  # Which extractor was used
   #   requested_url: "https://example.com/blog", # Original URL before redirects
   #   content_type: "text/html; charset=utf-8",  # HTTP Content-Type header
   #   redirected: true                           # Whether redirects occurred
@@ -211,7 +215,19 @@ page.metadata  # => {
 
 ## Extraction Backends
 
-### Default (ruby-readability)
+### Defuddle (default)
+
+Runs the bundled Defuddle parser in Node.js against the acquired HTML and final
+URL. Returns Markdown directly, retaining structure such as code blocks, tables,
+and links. Supports `--selector`. Each extraction owns its process, with a
+15-second deadline, a 64 MiB JSON response limit and a 64 KiB diagnostic limit.
+These are separate from HTTP timeouts and retained-command byte budgets.
+Page scripts do not execute and third-party fallback fetching is disabled.
+Failures remain visible through `details: true`; there is no automatic switch
+to Readability. `ExtractHtml` uses this same engine while retaining its decoding,
+plain-text rendering and byte-budget contract.
+
+### Readability (explicit backup)
 
 Parses static HTML using [ruby-readability](https://github.com/cantino/ruby-readability), strips noisy elements (script, style, nav, footer), and converts to Markdown via [reverse_markdown](https://github.com/xijo/reverse_markdown). Fast and requires no external services, but cannot extract content from JS-rendered pages.
 
@@ -220,9 +236,13 @@ Title extraction uses a fallback chain:
 2. Original `<title>` tag from HTML
 3. First `<h1>` from extracted content
 
-### Jina Reader API
+### Migrating from Jina
 
-Uses the [Jina Reader API](https://jina.ai/reader/) which renders pages with headless Chrome. Handles Next.js App Router, React Server Components, SPAs, and other JS-heavy sites. Free tier allows 20 requests/minute without a key, or 500 RPM with a `JINA_API_KEY` environment variable.
+`Extractor::Jina` and `--jina` have been removed. Remove the extractor argument or
+flag to use Defuddle; `JINA_API_KEY` is no longer used. This retires remote browser
+rendering: pages requiring JavaScript may yield incomplete or no readable content.
+Use `Extractor::Default.new` or `--readability` for the Ruby-only backup.
+`ExtractHtml` always uses Defuddle; its result and error shapes remain unchanged.
 
 ## Output Formats
 
@@ -235,7 +255,7 @@ XML-tagged output designed for LLM context windows:
   <title>Page Title</title>
   <url>https://example.com/page</url>
   <pathname>/page</pathname>
-  <extractor>Nous::Extractor::Default</extractor>
+  <extractor>Nous::Extractor::Defuddle</extractor>
   <content>
 # Heading
 
@@ -254,7 +274,7 @@ Extracted markdown content...
     "pathname": "/page",
     "content": "# Heading\n\nExtracted markdown content...",
     "metadata": {
-      "extractor": "Nous::Extractor::Default",
+      "extractor": "Nous::Extractor::Defuddle",
       "requested_url": "https://example.com/page",
       "content_type": "text/html; charset=utf-8",
       "redirected": false

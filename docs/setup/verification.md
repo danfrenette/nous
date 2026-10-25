@@ -13,7 +13,9 @@ missing, provision those declared versions using your runtime manager first.
 Do not update or regenerate the lockfile to make verification work. Frozen mode
 also prevents Bundler from opportunistically rewriting platform metadata.
 
-The recipes use RSpec, WebMock and Nous's locked parsing dependencies. No server,
-Jina key, browser, remote account, external binary or model is needed. HTTP in the
-failure recipe is a controlled response fixture; all other network is disabled.
+The recipes use RSpec, WebMock, Node.js 22+ and the bundled Defuddle adapter.
+Follow [Defuddle setup and readiness](defuddle.md) before running them. No server,
+browser, remote account or model is needed. HTTP in the failure recipe is a
+controlled response fixture. WebMock blocks Ruby HTTP; the Node adapter disables
+Defuddle async fetching and rejects fetch calls.
 No credentials or retained private content belong in evidence.

@@ -87,7 +87,7 @@ RSpec.describe "Retained HTML extraction" do
 
   it "keeps unexpected dependency failures diagnostic without exposing their message" do
     error = ArgumentError.new("private retained source text")
-    allow(Readability::Document).to receive(:new).and_raise(error)
+    allow(Nous::Extractor::Defuddle::Client).to receive(:new).and_raise(error)
 
     result = Nous::ExtractHtml.call(html: fixture("index.html"), source_url: "saved")
 
@@ -97,7 +97,9 @@ RSpec.describe "Retained HTML extraction" do
   end
 
   it "rejects empty final conversion output" do
-    allow(ReverseMarkdown).to receive(:convert).and_return("")
+    allow_any_instance_of(Nous::Extractor::Defuddle::Client).to receive(:call).and_return(
+      Nous::Command::Result.new(success: true, payload: {title: "Title", content: "<p>Body</p>", markdown: ""})
+    )
     result = Nous::ExtractHtml.call(html: fixture("index.html"), source_url: "saved")
     expect(result.error).to be_a(Nous::ExtractHtml::NoContent)
   end

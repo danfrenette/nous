@@ -1,0 +1,3 @@
+# Preserve upstream license text and whitespace inside generated template literals.
+vendor/defuddle.mjs -whitespace linguist-generated=true
+vendor/THIRD_PARTY_LICENSES.txt -whitespace

@@ -40,9 +40,9 @@ module Nous
     end
 
     def extractor
-      return Extractor::Jina.new if options[:jina]
+      return Extractor::Default.new(selector: options[:selector]) if options[:readability]
 
-      Extractor::Default.new(selector: options[:selector])
+      Extractor::Defuddle.new(selector: options[:selector])
     end
 
     def validate!
@@ -78,7 +78,7 @@ module Nous
         opts.on("-s", "--selector SELECTOR", "CSS selector to scope extraction") { |v| options[:selector] = v }
         opts.on("-l", "--limit N", Integer, "Maximum pages to fetch") { |v| options[:limit] = v }
         opts.on("--timeout N", Integer, "Per-request timeout in seconds (default: 15)") { |v| options[:timeout] = v }
-        opts.on("--jina", "Use Jina Reader API for extraction (handles JS-rendered sites)") { options[:jina] = true }
+        opts.on("--readability", "Use the Ruby Readability backup extractor") { options[:readability] = true }
         opts.on("-r", "--recursive", "Follow same-host links recursively") { options[:recursive] = true }
         opts.on("-d", "--debug", "Debug logging to stderr") { options[:debug] = true }
         opts.on("-v", "--version", "Show version") do

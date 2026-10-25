@@ -13,8 +13,8 @@ Legacy `Extractor::Default#extract` remains compatible.
 
 **Prerequisites:** Follow [launch and doctor](README.md). The synthetic existing
 fixtures and inline examples contain no private captures. No identity or durable
-state is involved. WebMock disables network. External readability/Markdown failures
-are controlled only in diagnostic and empty-conversion tests.
+state is involved. WebMock disables network. The bundled Defuddle parser runs locally under Node; process/dependency failures
+are controlled in diagnostic tests. No real websites are requested.
 
 **Drive:**
 
