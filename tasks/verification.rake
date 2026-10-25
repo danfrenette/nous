@@ -8,7 +8,7 @@ namespace :verify do
 
   desc "Verify bundled Defuddle extraction and process boundaries"
   RSpec::Core::RakeTask.new(:defuddle) do |task|
-    task.pattern = %w[spec/nous/extractor/defuddle_spec.rb spec/nous/extractor/defuddle/client_spec.rb spec/nous/cli_spec.rb]
+    task.pattern = %w[spec/nous/extractor/defuddle_spec.rb spec/nous/extractor/defuddle/client_spec.rb spec/nous/extractor/defuddle/run_process_spec.rb spec/nous/cli_spec.rb]
   end
 
   desc "Verify offline retained-HTML extraction baseline"
