@@ -33,7 +33,7 @@ BUNDLE_FROZEN=true bundle check > "$receipt_dir/bundle.log" 2>&1
 printf '%s\n' "$?" > "$receipt_dir/bundle.exit"
 git rev-parse HEAD > "$receipt_dir/head.txt"
 git status --short > "$receipt_dir/status.txt"
-git diff --binary > "$receipt_dir/working-tree.patch"
+git diff --binary HEAD > "$receipt_dir/working-tree.patch"
 BUNDLE_FROZEN=true bundle exec ruby -Ilib -r nous -e 'puts Nous::VERSION; puts $LOADED_FEATURES.grep(%r{/lib/nous.rb$})' > "$receipt_dir/target.log" 2>&1
 printf '%s\n' "$?" > "$receipt_dir/target.exit"
 git ls-files --others --exclude-standard -z | BUNDLE_FROZEN=true bundle exec ruby -rdigest -e 'STDIN.read.split("\0").each { |path| puts "#{Digest::SHA256.file(path).hexdigest}  #{path}" if File.file?(path) }' > "$receipt_dir/untracked.sha256"

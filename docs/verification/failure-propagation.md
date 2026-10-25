@@ -25,7 +25,8 @@ printf '%s\n' "$?" > "$receipt_dir/failure-propagation.exit"
 
 **Assertions:** Failed original URL remains visible in `failures`; `all_succeeded?`
 is false and no page is fabricated. Require exit zero. The ordinary integration suite also covers mixed acquisition and
-extraction failures, readable page order, and original unexpected extractor errors.
+extraction failures, readable page order, in-flight batch limits with complete attempt
+accounting, and original unexpected extractor errors.
 
 **Evidence and cleanup:** Follow [capture and cleanup](README.md). Retain the failed
 log and exit status. WebMock and Nous configuration reset with the test process.

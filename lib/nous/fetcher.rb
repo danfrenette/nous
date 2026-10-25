@@ -45,7 +45,7 @@ module Nous
       success(payload: FetchResult.new(
         pages: @extraction.payload,
         failures: build_failures(@failed_records) + @extraction.metadata.fetch(:failures),
-        total_requested: @records.length
+        total_requested: @total_requested
       ))
     end
 
@@ -53,6 +53,7 @@ module Nous
       result = Crawler.call(seed_url:, http_client:)
       raise FetchError, result.error.message if result.failure?
 
+      @total_requested = result.metadata.fetch(:total_requested, result.payload.length)
       result.payload
     end
 
