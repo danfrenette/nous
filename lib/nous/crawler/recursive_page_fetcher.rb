@@ -60,15 +60,11 @@ module Nous
       end
 
       def fetch_batch(urls, client)
-        tasks = []
-
         Async do |task|
-          urls.each do |url|
-            tasks << task.async { page_fetcher(client).fetch(url) }
+          urls.map do |url|
+            task.async { page_fetcher(client).fetch(url) }
           end
-        end.wait
-
-        tasks.map(&:wait)
+        end.wait.map(&:wait)
       end
 
       def enqueue_links(record)

@@ -120,11 +120,11 @@ module Nous
 
     def render_content
       if format == :text
-        fragment = Nokogiri::HTML.fragment(@readable[:content])
-        fragment.css("p, div, h1, h2, h3, h4, h5, h6, li, tr, br").each do |node|
-          node.add_next_sibling(Nokogiri::XML::Text.new(" ", fragment.document))
-        end
-        @content = fragment.text.gsub(/\s+/, " ").strip
+        @content = Nokogiri::HTML.fragment(@readable[:content]).tap do |fragment|
+          fragment.css("p, div, h1, h2, h3, h4, h5, h6, li, tr, br").each do |node|
+            node.add_next_sibling(Nokogiri::XML::Text.new(" ", fragment.document))
+          end
+        end.text.gsub(/\s+/, " ").strip
         return
       end
 

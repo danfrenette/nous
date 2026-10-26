@@ -66,6 +66,17 @@ or `respond_to?`. At an untrusted provider boundary, validate the actual protoco
 and required data before producing normalized content. Do not spread speculative
 type checks through in-process callers.
 
+## Building and configuring objects
+
+Prefer `tap` when configuring and returning the same object, and
+`each_with_object` when accumulating into a mutable collection, instead of a
+temporary local used only to initialize, mutate, and return that object. This
+keeps construction and its result in one expression. Use `map` for one-to-one
+transformations; keep named locals when they explain an intermediate result or
+are reused. With `each_with_object`, mutate the accumulator rather than reassign
+the block variable. These blocks belong inside private service steps, preserving
+the bareword-only business `call` convention.
+
 ## Arguments and defaults
 
 For each proposed argument, inspect its callers and choose in this order:
