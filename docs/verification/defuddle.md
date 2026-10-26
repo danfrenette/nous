@@ -21,7 +21,8 @@ Require exit zero. The extractor specs exercise the actual bundled parser with
 synthetic HTML. Client specs cover JSON/field validation, empty content and propagation of a
 failed process result. `RunProcess` specs independently exercise raw process
 output, nonzero exit, output limits, reaping and timeout cleanup with controlled
-Ruby subprocesses. Missing-runtime and safe-diagnostic errors are covered through `RunProcess`. CLI specs check backend selection.
+Ruby subprocesses. Missing-runtime and safe-diagnostic errors are covered through `RunProcess`. CLI specs check backend selection and observable selector behavior. Acquired-byte
+specs cover BOM/meta decoding and meaningful invalid-byte/charset failures.
 Run the retained-HTML and failure-propagation recipes, full suite and Standard too.
 
 For installed-runtime and packaging compatibility, run the separate opt-in check:
