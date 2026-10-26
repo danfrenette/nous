@@ -61,7 +61,7 @@ module Nous
     end
 
     def decode_retained_html
-      result = DecodeHtml.call(html: html, content_type: content_type)
+      result = DecodeHtml.new(html: html, content_type: content_type).call
       raise result.error if result.failure?
 
       @decoded = result.payload
@@ -77,7 +77,7 @@ module Nous
       raise result.error if result.failure?
 
       @readable = result.payload
-      @title = @readable[:title].encode(Encoding::UTF_8)
+      @title = @readable[:title]
     rescue Extractor::Defuddle::Client::NoContent => error
       raise NoContent.new("HTML has no readable content"), cause: error
     end
@@ -95,15 +95,8 @@ module Nous
     end
 
     def verify_extracted_content
-      unless @content.encoding == Encoding::UTF_8 && @content.valid_encoding? && !@content.include?("\0")
-        raise InvalidContent, "Extracted content is not valid UTF-8"
-      end
       raise NoContent, "HTML has no readable content" if @content.strip.empty?
-      title = @title
-      unless title.encoding == Encoding::UTF_8 && title.valid_encoding? && !title.include?("\0")
-        raise InvalidContent, "Extracted title is not valid UTF-8"
-      end
-      if @content.bytesize + title.bytesize > max_output_bytes
+      if @content.bytesize + @title.bytesize > max_output_bytes
         raise OutputLimitExceeded, "Extracted content exceeds output byte limit"
       end
     end

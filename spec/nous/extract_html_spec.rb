@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "nokogiri"
+require "json"
+
 RSpec.describe "Retained HTML extraction" do
   it "extracts saved content and provenance without fetching or changing the bytes" do
     html = fixture("index.html").b.freeze
@@ -93,6 +96,30 @@ RSpec.describe "Retained HTML extraction" do
 
     expect(result.error).to be_a(Nous::ExtractHtml::UnexpectedFailure)
     expect(result.error.message).not_to include("private retained source text")
+    expect(result.error.cause).to equal(error)
+  end
+
+  it "preserves unexpected parser failures during decoding" do
+    error = RuntimeError.new("private parser diagnostic")
+    allow(Nokogiri).to receive(:HTML).and_raise(error)
+
+    result = Nous::ExtractHtml.call(html: "<p>Readable.</p>", source_url: "saved")
+
+    expect(result).to be_failure
+    expect(result.error).to be_a(Nous::ExtractHtml::UnexpectedFailure)
+    expect(result.error.message).not_to include("private")
+    expect(result.error.cause).to equal(error)
+  end
+
+  it "preserves unexpected failures during client execution" do
+    error = RuntimeError.new("private serialization diagnostic")
+    allow(JSON).to receive(:generate).and_raise(error)
+
+    result = Nous::ExtractHtml.call(html: "<p>Readable.</p>", source_url: "saved")
+
+    expect(result).to be_failure
+    expect(result.error).to be_a(Nous::ExtractHtml::UnexpectedFailure)
+    expect(result.error.message).not_to include("private")
     expect(result.error.cause).to equal(error)
   end
 
