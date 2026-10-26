@@ -27,7 +27,7 @@ printf '%s\n' "$?" > "$receipt_dir/retained-html.exit"
 legacy default extractor tests. They check title/content, selector compatibility,
 unreadable failure, header/meta conflict, BOM/meta/default charset, invalid bytes,
 NULs, formats/types, real charset declarations versus examples, byte thresholds, title-inclusive multibyte budgets, safe
-unexpected causes, empty final conversion and concurrent isolation. See
+unexpected causes during decoder parsing and client execution, empty final conversion and concurrent isolation. See
 [the public contract](../../README.md#retained-html-extraction) for supported policy.
 There is no durable application write to read back.
 

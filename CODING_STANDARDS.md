@@ -169,7 +169,14 @@ output representation and two independent caller budgets. This is a deliberate
 exception to the parameter heuristic: a hash or options object without cohesive
 behavior would only hide the same choices. The command orchestrates decoding, readable
 selection, rendering and bounded output. `DecodeHtml` owns the byte interpretation
-policy shared with acquired Defuddle HTML. Legacy shared extractors must
+policy shared with acquired Defuddle HTML. Within `ExtractHtml`, invoke `DecodeHtml`
+and `Defuddle::Client` with `new(...).call`: this deliberate exception to inherited
+`.call` preserves the original unexpected exception as `UnexpectedFailure#cause`.
+The shared dispatcher wraps those exceptions and loses their identity. Keep this
+exception local to the retained command's diagnostic contract and cover failures
+during dependency execution. Trust the client's normalized title and Markdown;
+the retained command owns final rendering, emptiness and combined-byte budgets.
+Legacy shared extractors must
 not acquire per-record mutable state: the fetch runner calls them concurrently.
 
 ## Sources and adaptation

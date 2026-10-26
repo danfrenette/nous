@@ -16,7 +16,6 @@ module Nous
         end
 
         def call
-          verify_input
           run_defuddle
           validate_response
           report_content
@@ -27,12 +26,6 @@ module Nous
         end
 
         private
-
-        def verify_input
-          unless @html.is_a?(String)
-            raise ProcessError, "Defuddle HTML input must be a string"
-          end
-        end
 
         def run_defuddle
           request = JSON.generate(html: @html, url: @url, selector: @selector)
