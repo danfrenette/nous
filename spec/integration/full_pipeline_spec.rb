@@ -43,6 +43,41 @@ RSpec.describe "Full pipeline integration" do
       end.new
     end
 
+    it "resolves the fetch mode at execution instead of construction" do
+      responses["https://example.com/"] = mock_response.new(status: 404, body: "")
+      Nous.reset_configuration!
+      fetcher = Nous::Fetcher.new(seed_url: "https://example.com/", http_client: fake_client)
+      Nous.configure(recursive: true, limit: 1)
+
+      result = fetcher.call
+
+      expect(result).to be_success
+      expect(result.payload).to eq([])
+    end
+
+    it "uses the current mode after configuration changes" do
+      responses["https://example.com/"] = mock_response.new(status: 404, body: "")
+      Nous.configure(limit: 1)
+      fetcher = Nous::Fetcher.new(seed_url: "https://example.com/", http_client: fake_client)
+      Nous.configure(recursive: true, limit: 1)
+
+      expect(fetcher.call.payload).to eq([])
+    end
+
+    it "decodes raw acquired bytes using the response charset" do
+      html = '<html><head><meta charset="utf-8"><title>Café</title></head><body><p>Crème brûlée.</p></body></html>'.encode("Windows-1252").b.freeze
+      responses["https://example.com/"] = mock_response.new(status: 200, body: html,
+        content_type: "text/html; charset=windows-1252")
+
+      result = Nous.fetch("https://example.com", http_client: fake_client,
+        recursive: true, limit: 1, details: true)
+
+      expect(result.failures).to be_empty
+      expect(result.pages.first.title).to eq("Café")
+      expect(result.pages.first.content).to eq("Crème brûlée.")
+      expect(html.encoding).to eq(Encoding::BINARY)
+    end
+
     it "reports acquisition and extraction failures while retaining readable page order" do
       responses["https://example.com/about"] = mock_response.new(status: 200, body: "<html><body></body></html>")
 

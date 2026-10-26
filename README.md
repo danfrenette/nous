@@ -2,7 +2,7 @@
 
 Crawl websites and extract readable Markdown, optimized for LLM consumption. Inspired by [sitefetch](https://github.com/egoist/sitefetch).
 
-Nous fetches same-host pages starting from a seed URL, extracts readable content, and outputs clean Markdown as XML-tagged text or JSON. It supports concurrent crawling, glob-based URL filtering, and local extraction with Defuddle by default and an explicit ruby-readability backup. Both parse acquired HTML without rendering JavaScript.
+Nous fetches same-host pages starting from a seed URL, extracts readable content, and outputs clean Markdown as XML-tagged text or JSON. It supports concurrent crawling, glob-based URL filtering, and local extraction with Defuddle by default and an explicit ruby-readability backup. Both parse acquired HTML without rendering JavaScript. Defuddle decodes acquired bytes using the same header/BOM/meta/UTF-8 precedence as retained HTML; invalid bytes produce extraction failures.
 
 ## Installation
 

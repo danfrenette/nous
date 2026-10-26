@@ -8,11 +8,11 @@ module Nous
       @seed_url = seed_url
       @extractor = extractor
       @http_client = http_client
-      @single_page = Nous.configuration.single_page?
       @details = details
     end
 
     def call
+      resolve_fetch_mode
       acquire_records
       verify_acquisition
       extract_readable_pages
@@ -22,6 +22,10 @@ module Nous
     private
 
     attr_reader :seed_url, :extractor, :http_client, :single_page, :details
+
+    def resolve_fetch_mode
+      @single_page = Nous.configuration.single_page?
+    end
 
     def acquire_records
       @records = crawl

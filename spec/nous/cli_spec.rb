@@ -104,7 +104,11 @@ RSpec.describe Nous::Cli do
 
       expect(Nous).to have_received(:fetch) do |_url, **opts|
         extractor = opts[:extractor]
-        expect(extractor).to be_a(Nous::Extractor::Defuddle)
+        record = Nous::FetchRecord.new(requested_url: "https://example.com", pathname: "/", final_url: "https://example.com",
+          html: '<article class="main"><p>Chosen.</p></article><p>Excluded.</p>')
+        result = extractor.extract(record)
+        expect(result).to be_success
+        expect(result.payload.content).to eq("Chosen.")
       end
     end
   end

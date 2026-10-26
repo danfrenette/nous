@@ -167,8 +167,9 @@ principle or prove live-provider behavior.
 `ExtractHtml` keeps six explicit inputs: original bytes, source URL, content type,
 output representation and two independent caller budgets. This is a deliberate
 exception to the parameter heuristic: a hash or options object without cohesive
-behavior would only hide the same choices. The command owns decoding, readable
-selection, rendering and bounded output together. Legacy shared extractors must
+behavior would only hide the same choices. The command orchestrates decoding, readable
+selection, rendering and bounded output. `DecodeHtml` owns the byte interpretation
+policy shared with acquired Defuddle HTML. Legacy shared extractors must
 not acquire per-record mutable state: the fetch runner calls them concurrently.
 
 ## Sources and adaptation
